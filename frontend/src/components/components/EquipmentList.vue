@@ -1,19 +1,19 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from "vue";
-import axios from 'axios';
+import { ref, onMounted, computed, watch } from 'vue'
+import axios from 'axios'
 import { ElDrawer, ElMessageBox } from 'element-plus'
 
 interface Equipment {
-  id: String,
-  name: String,
-  unit: String,
-  quantity: Number,
-  price: String,
-  type: String,
+  _id: String
+  name: String
+  unit: String
+  quantity: Number
+  price: String
+  type: String
 }
 
 const equipments = ref<Equipment[]>([])
-const search = ref("")
+const search = ref('')
 const showEquipmentForm = ref(false)
 const loading = ref(false)
 const pageSize = ref(10)
@@ -21,35 +21,33 @@ const currentPage = ref(1)
 const pagingData = ref<Equipment[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+let timer: ReturnType<typeof setTimeout> | undefined
 
 const equipmentFromData = ref<Equipment>({
-  id: '',
+  _id: '',
   name: '',
   unit: '',
   quantity: 0,
   price: '',
-  type: '',
+  type: ''
 })
 
 const fetchEquipments = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:3333/equipment");
-    equipments.value = response.data;
+    const response = await axios.get('http://127.0.0.1:3333/equipment')
+    equipments.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
-    console.log(response);
+    console.log(response)
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
-};
+}
 
 const filterTableData = computed(() =>
-equipments.value.filter(
-    (data) =>
-      !search.value ||
-      data.name.toLowerCase().includes(search.value.toLowerCase())
+  equipments.value.filter(
+    (data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
   )
-);
+)
 
 const onPageChange = async (pageNumber: number): Promise<void> => {
   currentPage.value = pageNumber
@@ -60,32 +58,89 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
 }
 
 const openEquipmentForm = (equipment: Equipment) => {
-  showEquipmentForm.value = true;
-  equipmentFromData.value = { ...equipment };
-};
+  showEquipmentForm.value = true
+  equipmentFromData.value = { ...equipment }
+}
+
+const resetForm = () => {
+  equipmentFromData.value = {
+    _id: '',
+    name: '',
+    unit: '',
+    quantity: 0,
+    price: '',
+    type: ''
+  }
+}
 
 const onClick = (done: () => void) => {
   if (loading.value) {
     return
   }
-  ElMessageBox.confirm('Do you want to submit?')
+  ElMessageBox.confirm('Bạn có muốn lưu?')
     .then(() => {
       loading.value = true
-      timer = setTimeout(() => {
-        done()
-        setTimeout(() => {
-          loading.value = false
-        }, 400)
-      }, 2000)
-    })
-    .catch(() => {
-      console.log('error');
-    }
-  )
+      
+      const newEquipment = { ...equipmentFromData.value }
+      console.log(newEquipment);
+      
+      if (newEquipment._id) {
+        axios
+          .put(`http://127.0.0.1:3333/equipment/${newEquipment._id}`, newEquipment)
+          .then((response) => {
+            console.log(response.data)
+            resetForm()
+            fetchEquipments()
+            showEquipmentForm.value = false
+            loading.value = false
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        axios
+          .post('http://127.0.0.1:3333/equipment', newEquipment)
+          .then((response) => {
+            console.log(response.data)
+            resetForm()
+            fetchEquipments()
+            showEquipmentForm.value = false
+            loading.value = false
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      }
+  })
+  .catch(() => {
+    console.log('error')
+  })
 }
 
 const handleClose = () => {
   ruleFormRef.value!.close()
+}
+
+const deleteEquipment = (equipment: Equipment) => {
+  ElMessageBox.confirm('Bạn có chắc chắn muốn xóa thiết bị này?', 'Xác nhận', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning'
+  })
+    .then(() => {
+      axios
+        .delete(`http://127.0.0.1:3333/equipment/${equipment._id}`)
+        .then((response) => {
+          console.log(response.data)
+          fetchEquipments()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    })
+    .catch(() => {
+      console.log('Hủy bỏ xóa thiết bị')
+    })
 }
 
 const cancelForm = () => {
@@ -95,8 +150,8 @@ const cancelForm = () => {
 }
 
 onMounted(() => {
-  fetchEquipments();
-});
+  fetchEquipments()
+})
 
 watch(search, () => {
   currentPage.value = 1
@@ -114,6 +169,10 @@ watch(search, () => {
         prefix-icon="el-icon-search"
         placeholder="Nhập tên thiết bị"
       />
+      <div class="d-flex add-icon">
+        <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openEquipmentForm" />
+        <div class="title-add">Thêm</div>
+      </div>
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
@@ -135,10 +194,7 @@ watch(search, () => {
               icon="fa-solid fa-pencil"
               @click="openEquipmentForm(scope.row)"
             />
-            <font-awesome-icon
-              class="font-awesome-icon"
-              icon="fa-regular fa-trash-can"
-            />
+            <font-awesome-icon @click="deleteEquipment(scope.row)" class="font-awesome-icon" icon="fa-regular fa-trash-can" />
           </template>
         </el-table-column>
       </el-table>
@@ -161,46 +217,44 @@ watch(search, () => {
   </el-main>
 
   <el-drawer
-      ref="ruleFormRef"
-      v-model="showEquipmentForm"
-      :before-close="handleClose"
-      direction="rtl"
-      class="equipment-drawer"
-      size="50%"
-    >
+    ref="ruleFormRef"
+    v-model="showEquipmentForm"
+    :before-close="handleClose"
+    direction="rtl"
+    class="equipment-drawer"
+    size="50%"
+  >
     <template #header>
-      <div class="equipment-drawer-title">
-        Thông tin thiết bị
-      </div>
+      <div class="equipment-drawer-title">Thông tin thiết bị</div>
     </template>
-      <div class="demo-drawer__content">
-        <el-form :model="equipmentFromData" label-width="140px">
-          <el-form-item label="Tên thiết bị" prop="name" class="equipment-form-item">
-            <el-input v-model="equipmentFromData.name"></el-input>
-          </el-form-item>
-          <el-form-item label="ĐVT" prop="unit" class="equipment-form-item">
-            <el-input v-model="equipmentFromData.unit"></el-input>
-          </el-form-item>
-          <el-form-item label="Giá" prop="price" class="equipment-form-item">
-            <el-input v-model="equipmentFromData.price"></el-input>
-          </el-form-item>
-          <el-form-item label="Số lượng" prop="quantity" class="equipment-form-item">
-            <el-input v-model="equipmentFromData.quantity"></el-input>
-          </el-form-item>
-          <el-form-item label="Tổng giá trị" prop="price" class="equipment-form-item">
-            <el-input v-model="equipmentFromData.price"></el-input>
-          </el-form-item>
-          <el-form-item label="Phân loại" prop="type" class="equipment-form-item">
-            <el-input v-model="equipmentFromData.type"></el-input>
-          </el-form-item>
-        </el-form>
-        <div class="equipment-drawer-button">
-          <el-button @click="cancelForm">Hủy bỏ</el-button>
-          <el-button type="primary" :loading="loading" @click="onClick">{{
-            loading ? 'Submitting ...' : 'Lưu'
-          }}</el-button>
-        </div>
+    <div class="demo-drawer__content">
+      <el-form :model="equipmentFromData" label-width="140px">
+        <el-form-item label="Tên thiết bị" prop="name" class="equipment-form-item">
+          <el-input v-model="equipmentFromData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="ĐVT" prop="unit" class="equipment-form-item">
+          <el-input v-model="equipmentFromData.unit"></el-input>
+        </el-form-item>
+        <el-form-item label="Giá" prop="price" class="equipment-form-item">
+          <el-input v-model="equipmentFromData.price"></el-input>
+        </el-form-item>
+        <el-form-item label="Số lượng" prop="quantity" class="equipment-form-item">
+          <el-input v-model="equipmentFromData.quantity"></el-input>
+        </el-form-item>
+        <el-form-item label="Tổng giá trị" prop="price" class="equipment-form-item">
+          <el-input v-model="equipmentFromData.price"></el-input>
+        </el-form-item>
+        <el-form-item label="Phân loại" prop="type" class="equipment-form-item">
+          <el-input v-model="equipmentFromData.type"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="equipment-drawer-button">
+        <el-button @click="cancelForm">Hủy bỏ</el-button>
+        <el-button type="primary" :loading="loading" @click="onClick">{{
+          loading ? 'Submitting ...' : 'Lưu'
+        }}</el-button>
       </div>
+    </div>
   </el-drawer>
 </template>
 

@@ -68,7 +68,6 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
   const startIndex = (pageNumber - 1) * rowsNumber
   const endIndex = pageNumber * rowsNumber
   pagingData.value = filterTableData.value.slice(startIndex, endIndex)
-  await fetchPatients();
 }
 
 const openPatientForm = (patient: Patient) => {
@@ -76,12 +75,7 @@ const openPatientForm = (patient: Patient) => {
   patientFromData.value = { ...patient }
 }
 
-const handleClose = () => {
-  ruleFormRef.value!.close()
-}
-
 const resetForm = () => {
-  // Đặt lại giá trị mặc định cho đối tượng patientFromData
   patientFromData.value = {
     _id: '',
     patientCode: '',
@@ -95,74 +89,78 @@ const resetForm = () => {
     state: '',
     expense: '',
     room: ''
-  };
+  }
 }
-
 
 const onClick = () => {
   if (loading.value) {
-    return;
+    return
   }
   ElMessageBox.confirm('Bạn có muốn lưu?')
     .then(() => {
-      loading.value = true;
+      loading.value = true
 
-      const newPatient = { ...patientFromData.value };
-      console.log(newPatient);
-      
+      const newPatient = { ...patientFromData.value }
+      console.log(newPatient)
+
       if (newPatient._id) {
-        axios.put(`http://127.0.0.1:3333/${newPatient._id}`, newPatient)
-          .then(response => {
-            console.log(response.data);
-            resetForm();
-            fetchPatients();
-            showPatientForm.value = false;
-            loading.value = false;
+        axios
+          .put(`http://127.0.0.1:3333/${newPatient._id}`, newPatient)
+          .then((response) => {
+            console.log(response.data)
+            resetForm()
+            fetchPatients()
+            showPatientForm.value = false
+            loading.value = false
           })
-          .catch(error => {
-            console.log(error);
-          });
+          .catch((error) => {
+            console.log(error)
+          })
       } else {
-        axios.post('http://127.0.0.1:3333', newPatient)
-          .then(response => {
-            console.log(response.data);
-            resetForm();
-            fetchPatients();
-            showPatientForm.value = false;
-            loading.value = false;
+        axios
+          .post('http://127.0.0.1:3333', newPatient)
+          .then((response) => {
+            console.log(response.data)
+            resetForm()
+            fetchPatients()
+            showPatientForm.value = false
+            loading.value = false
           })
-          .catch(error => {
-            console.log(error);
-          });
+          .catch((error) => {
+            console.log(error)
+          })
       }
     })
     .catch(() => {
-      console.log('error');
-    });
+      console.log('error')
+    })
+}
+
+const handleClose = () => {
+  ruleFormRef.value!.close()
 }
 
 const deletePatient = (patient: Patient) => {
   ElMessageBox.confirm('Bạn có chắc chắn muốn xóa bệnh nhân này?', 'Xác nhận', {
     confirmButtonText: 'Xóa',
     cancelButtonText: 'Hủy',
-    type: 'warning',
+    type: 'warning'
   })
     .then(() => {
       axios
         .delete(`http://127.0.0.1:3333/${patient._id}`)
         .then((response) => {
-          console.log(response.data);
-          fetchPatients();
+          console.log(response.data)
+          fetchPatients()
         })
         .catch((error) => {
-          console.log(error);
-        });
+          console.log(error)
+        })
     })
     .catch(() => {
-      console.log('Hủy bỏ xóa bệnh nhân');
-    });
-};
-
+      console.log('Hủy bỏ xóa bệnh nhân')
+    })
+}
 
 const cancelForm = () => {
   loading.value = false
@@ -237,7 +235,11 @@ watch(search, () => {
               icon="fa-solid fa-pencil"
               @click="openPatientForm(scope.row)"
             />
-            <font-awesome-icon @click="deletePatient(scope.row)" class="font-awesome-icon" icon="fa-regular fa-trash-can" />
+            <font-awesome-icon
+              @click="deletePatient(scope.row)"
+              class="font-awesome-icon"
+              icon="fa-regular fa-trash-can"
+            />
           </template>
         </el-table-column>
       </el-table>
