@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
-import { ElDrawer, ElMessageBox } from 'element-plus'
+import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 
 interface Patient {
   id: String

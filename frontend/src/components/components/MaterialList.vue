@@ -1,19 +1,19 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from "vue";
-import axios from 'axios';
-import { ElDrawer, ElMessageBox } from 'element-plus'
+import { ref, onMounted, computed, watch } from 'vue'
+import axios from 'axios'
+import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 
 interface Material {
-  id: String,
-  name: String,
-  unit: String,
-  quantity: Number,
-  price: String,
-  type: String,
+  _id: String
+  name: String
+  unit: String
+  quantity: Number
+  price: String
+  type: String
 }
 
 const materials = ref<Material[]>([])
-const search = ref("")
+const search = ref('')
 const showMaterialForm = ref(false)
 const loading = ref(false)
 const pageSize = ref(10)
@@ -21,33 +21,31 @@ const currentPage = ref(1)
 const pagingData = ref<Material[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+let timer: ReturnType<typeof setTimeout> | undefined
 
 const materialFromData = ref<Material>({
-  id: '',
+  _id: '',
   name: '',
   unit: '',
   quantity: 0,
   price: '',
-  type: '',
+  type: ''
 })
 
 const fetchMaterials = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:3333/material");
+    const response = await axios.get('http://127.0.0.1:3333/material')
     materials.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
     console.log(response)
   } catch (error) {
     console.log(error)
   }
-};
+}
 
 const filterTableData = computed(() =>
-materials.value.filter(
-    (data) =>
-      !search.value ||
-      data.name.toLowerCase().includes(search.value.toLowerCase())
+  materials.value.filter(
+    (data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
@@ -59,33 +57,117 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
   pagingData.value = filterTableData.value.slice(startIndex, endIndex)
 }
 
-const openMaterialForm = (material: Material) => {
-  showMaterialForm.value = true;
-  materialFromData.value = { ...material }
-};
-
-const onClick = (done: () => void) => {
-  if (loading.value) {
-    return
+const resetForm = () => {
+  materialFromData.value = {
+    _id: '',
+    name: '',
+    unit: '',
+    quantity: 0,
+    price: '',
+    type: ''
   }
-  ElMessageBox.confirm('Do you want to submit?')
-    .then(() => {
-      loading.value = true
-      timer = setTimeout(() => {
-        done()
-        setTimeout(() => {
-          loading.value = false
-        }, 400)
-      }, 2000)
+}
+
+const openMaterialForm = (material: Material) => {
+  showMaterialForm.value = true
+  materialFromData.value = { ...material }
+}
+
+const onClick = (item: any) => {
+  const newMaterial = { ...materialFromData.value }
+  console.log(newMaterial)
+
+  if (newMaterial._id) {
+    axios
+      .put(`http://127.0.0.1:3333/material/${newMaterial._id}`, newMaterial)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchMaterials()
+        showMaterialForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    axios
+      .post('http://127.0.0.1:3333/material', newMaterial)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchMaterials()
+        showMaterialForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  }
+}
+
+const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
     })
-    .catch(() => {
-      console.log('error');
-    }
-  )
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
 }
 
 const handleClose = () => {
   ruleFormRef.value!.close()
+}
+
+const deleteMaterial = (material: Material) => {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa vật tư này?', 'Xác nhận', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning'
+  })
+    .then(() => {
+      axios
+        .delete(`http://127.0.0.1:3333/material/${material._id}`)
+        .then((response) => {
+          console.log(response.data)
+          fetchMaterials()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+          ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+        })
+    })
+    .catch(() => {
+      console.log('Hủy bỏ xóa vật tư')
+    })
 }
 
 const cancelForm = () => {
@@ -114,6 +196,10 @@ watch(search, () => {
         prefix-icon="el-icon-search"
         placeholder="Nhập tên vật tư"
       />
+      <div class="d-flex add-icon">
+        <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openMaterialForm" />
+        <div class="title-add">Thêm</div>
+      </div>
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
@@ -138,6 +224,7 @@ watch(search, () => {
             <font-awesome-icon
               class="font-awesome-icon"
               icon="fa-regular fa-trash-can"
+              @click="deleteMaterial(scope.row)"
             />
           </template>
         </el-table-column>
@@ -161,46 +248,44 @@ watch(search, () => {
   </el-main>
 
   <el-drawer
-      ref="ruleFormRef"
-      v-model="showMaterialForm"
-      :before-close="handleClose"
-      direction="rtl"
-      class="material-drawer"
-      size="50%"
-    >
+    ref="ruleFormRef"
+    v-model="showMaterialForm"
+    :before-close="handleClose"
+    direction="rtl"
+    class="material-drawer"
+    size="50%"
+  >
     <template #header>
-      <div class="material-drawer-title">
-        Thông tin vật tư
-      </div>
+      <div class="material-drawer-title">Thông tin vật tư</div>
     </template>
-      <div class="demo-drawer__content">
-        <el-form :model="materialFromData" label-width="140px">
-          <el-form-item label="Tên vật tư" prop="name" class="material-form-item">
-            <el-input v-model="materialFromData.name"></el-input>
-          </el-form-item>
-          <el-form-item label="ĐVT" prop="unit" class="material-form-item">
-            <el-input v-model="materialFromData.unit"></el-input>
-          </el-form-item>
-          <el-form-item label="Giá" prop="price" class="material-form-item">
-            <el-input v-model="materialFromData.price"></el-input>
-          </el-form-item>
-          <el-form-item label="Số lượng" prop="quantity" class="material-form-item">
-            <el-input v-model="materialFromData.quantity"></el-input>
-          </el-form-item>
-          <el-form-item label="Tổng giá trị" prop="price" class="material-form-item">
-            <el-input v-model="materialFromData.price"></el-input>
-          </el-form-item>
-          <el-form-item label="Phân loại" prop="type" class="material-form-item">
-            <el-input v-model="materialFromData.type"></el-input>
-          </el-form-item>
-        </el-form>
-        <div class="material-drawer-button">
-          <el-button @click="cancelForm">Hủy bỏ</el-button>
-          <el-button type="primary" :loading="loading" @click="onClick">{{
-            loading ? 'Submitting ...' : 'Lưu'
-          }}</el-button>
-        </div>
+    <div class="demo-drawer__content">
+      <el-form :model="materialFromData" label-width="140px">
+        <el-form-item label="Tên vật tư" prop="name" class="material-form-item">
+          <el-input v-model="materialFromData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="ĐVT" prop="unit" class="material-form-item">
+          <el-input v-model="materialFromData.unit"></el-input>
+        </el-form-item>
+        <el-form-item label="Giá" prop="price" class="material-form-item">
+          <el-input v-model="materialFromData.price"></el-input>
+        </el-form-item>
+        <el-form-item label="Số lượng" prop="quantity" class="material-form-item">
+          <el-input v-model="materialFromData.quantity"></el-input>
+        </el-form-item>
+        <el-form-item label="Tổng giá trị" prop="price" class="material-form-item">
+          <el-input v-model="materialFromData.price"></el-input>
+        </el-form-item>
+        <el-form-item label="Phân loại" prop="type" class="material-form-item">
+          <el-input v-model="materialFromData.type"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="material-drawer-button">
+        <el-button @click="cancelForm">Hủy bỏ</el-button>
+        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+          loading ? '' : 'Lưu'
+        }}</el-button>
       </div>
+    </div>
   </el-drawer>
 </template>
 

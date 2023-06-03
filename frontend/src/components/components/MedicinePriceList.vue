@@ -1,32 +1,32 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from "vue";
-import axios from 'axios';
-import { ElDrawer, ElMessageBox } from 'element-plus'
+import { ref, onMounted, computed, watch } from 'vue'
+import axios from 'axios'
+import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 
 interface MedicinePrice {
-  id: String,
-  name: String,
-  activeSubstance: String,
-  unit: String,
-  concentration: String,
-  quantity: Number,
-  price: String,
-  type: String,
+  _id: String
+  name: String
+  activeSubstance: String
+  unit: String
+  concentration: String
+  quantity: Number
+  price: String
+  type: String
 }
 
 const medicinePrices = ref<MedicinePrice[]>([])
-const search = ref("")
+const search = ref('')
 const showMedicineForm = ref(false)
 const loading = ref(false)
-const pageSize = ref(10);
-const currentPage = ref(1);
-const pagingData = ref<MedicinePrice[]>([]);
+const pageSize = ref(10)
+const currentPage = ref(1)
+const pagingData = ref<MedicinePrice[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+let timer: ReturnType<typeof setTimeout> | undefined
 
 const medicineFromData = ref<MedicinePrice>({
-  id: '',
+  _id: '',
   name: '',
   unit: '',
   quantity: 0,
@@ -38,20 +38,18 @@ const medicineFromData = ref<MedicinePrice>({
 
 const fetchMedicinePrices = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:3333/medicine_price")
+    const response = await axios.get('http://127.0.0.1:3333/medicine_price')
     medicinePrices.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
     console.log(response)
   } catch (error) {
     console.log(error)
   }
-};
+}
 
 const filterTableData = computed(() =>
-medicinePrices.value.filter(
-    (data) =>
-      !search.value ||
-      data.name.toLowerCase().includes(search.value.toLowerCase())
+  medicinePrices.value.filter(
+    (data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
@@ -63,33 +61,119 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
   pagingData.value = filterTableData.value.slice(startIndex, endIndex)
 }
 
+const resetForm = () => {
+  medicineFromData.value = {
+    _id: '',
+    name: '',
+    unit: '',
+    quantity: 0,
+    price: '',
+    type: '',
+    activeSubstance: '',
+    concentration: ''
+  }
+}
+
 const openMedicineForm = (medicine: MedicinePrice) => {
   showMedicineForm.value = true
   medicineFromData.value = { ...medicine }
 }
 
-const onClick = (done: () => void) => {
-  if (loading.value) {
-    return
+const onClick = (item: any) => {
+  const newMedicine = { ...medicineFromData.value }
+  console.log(newMedicine)
+
+  if (newMedicine._id) {
+    axios
+      .put(`http://127.0.0.1:3333/medicine_price/${newMedicine._id}`, newMedicine)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchMedicinePrices()
+        showMedicineForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    axios
+      .post('http://127.0.0.1:3333/medicine_price', newMedicine)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchMedicinePrices()
+        showMedicineForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
   }
-  ElMessageBox.confirm('Do you want to submit?')
-    .then(() => {
-      loading.value = true
-      timer = setTimeout(() => {
-        done()
-        setTimeout(() => {
-          loading.value = false
-        }, 400)
-      }, 2000)
+}
+
+const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
     })
-    .catch(() => {
-      console.log('error');
-    }
-  )
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
 }
 
 const handleClose = () => {
   ruleFormRef.value!.close()
+}
+
+const deleteMedicine = (medicine: MedicinePrice) => {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa thuốc này?', 'Xác nhận', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning'
+  })
+    .then(() => {
+      axios
+        .delete(`http://127.0.0.1:3333/medicine_price/${medicine._id}`)
+        .then((response) => {
+          console.log(response.data)
+          fetchMedicinePrices()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+          ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+        })
+    })
+    .catch(() => {
+      console.log('Hủy bỏ xóa thuốc')
+    })
 }
 
 const cancelForm = () => {
@@ -100,7 +184,7 @@ const cancelForm = () => {
 
 onMounted(() => {
   fetchMedicinePrices()
-});
+})
 
 watch(search, () => {
   currentPage.value = 1
@@ -118,6 +202,10 @@ watch(search, () => {
         prefix-icon="el-icon-search"
         placeholder="Nhập tên thuốc"
       />
+      <div class="d-flex add-icon">
+        <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openMedicineForm" />
+        <div class="title-add">Thêm</div>
+      </div>
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
@@ -142,6 +230,7 @@ watch(search, () => {
             <font-awesome-icon
               class="font-awesome-icon"
               icon="fa-regular fa-trash-can"
+              @click="deleteMedicine(scope.row)"
             />
           </template>
         </el-table-column>
@@ -165,49 +254,47 @@ watch(search, () => {
   </el-main>
 
   <el-drawer
-      ref="ruleFormRef"
-      v-model="showMedicineForm"
-      :before-close="handleClose"
-      direction="rtl"
-      class="medicine-drawer"
-      size="50%"
-    >
+    ref="ruleFormRef"
+    v-model="showMedicineForm"
+    :before-close="handleClose"
+    direction="rtl"
+    class="medicine-drawer"
+    size="50%"
+  >
     <template #header>
-      <div class="medicine-drawer-title">
-        Thông tin thuốc
-      </div>
+      <div class="medicine-drawer-title">Thông tin thuốc</div>
     </template>
-      <div class="demo-drawer__content">
-        <el-form :model="medicineFromData" label-width="140px">
-          <el-form-item label="Tên thuốc" prop="name" class="medicine-form-item">
-            <el-input v-model="medicineFromData.name"></el-input>
-          </el-form-item>
-          <el-form-item label="Hoạt chất" prop="activeSubstance" class="medicine-form-item">
-            <el-input v-model="medicineFromData.activeSubstance"></el-input>
-          </el-form-item>
-          <el-form-item label="ĐVT" prop="unit" class="medicine-form-item">
-            <el-input v-model="medicineFromData.unit"></el-input>
-          </el-form-item>
-          <el-form-item label="Hàm lượng/Nồng độ" prop="concentration" class="medicine-form-item">
-            <el-input v-model="medicineFromData.concentration"></el-input>
-          </el-form-item>
-          <el-form-item label="Giá" prop="price" class="medicine-form-item">
-            <el-input v-model="medicineFromData.price"></el-input>
-          </el-form-item>
-          <el-form-item label="Số lượng" prop="quantity" class="medicine-form-item">
-            <el-input v-model="medicineFromData.quantity"></el-input>
-          </el-form-item>
-          <el-form-item label="Phân loại" prop="type" class="medicine-form-item">
-            <el-input v-model="medicineFromData.type"></el-input>
-          </el-form-item>
-        </el-form>
-        <div class="medicine-drawer-button">
-          <el-button @click="cancelForm">Hủy bỏ</el-button>
-          <el-button type="primary" :loading="loading" @click="onClick">{{
-            loading ? 'Submitting ...' : 'Lưu'
-          }}</el-button>
-        </div>
+    <div class="demo-drawer__content">
+      <el-form :model="medicineFromData" label-width="140px">
+        <el-form-item label="Tên thuốc" prop="name" class="medicine-form-item">
+          <el-input v-model="medicineFromData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="Hoạt chất" prop="activeSubstance" class="medicine-form-item">
+          <el-input v-model="medicineFromData.activeSubstance"></el-input>
+        </el-form-item>
+        <el-form-item label="ĐVT" prop="unit" class="medicine-form-item">
+          <el-input v-model="medicineFromData.unit"></el-input>
+        </el-form-item>
+        <el-form-item label="Hàm lượng/Nồng độ" prop="concentration" class="medicine-form-item">
+          <el-input v-model="medicineFromData.concentration"></el-input>
+        </el-form-item>
+        <el-form-item label="Giá" prop="price" class="medicine-form-item">
+          <el-input v-model="medicineFromData.price"></el-input>
+        </el-form-item>
+        <el-form-item label="Số lượng" prop="quantity" class="medicine-form-item">
+          <el-input v-model="medicineFromData.quantity"></el-input>
+        </el-form-item>
+        <el-form-item label="Phân loại" prop="type" class="medicine-form-item">
+          <el-input v-model="medicineFromData.type"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="medicine-drawer-button">
+        <el-button @click="cancelForm">Hủy bỏ</el-button>
+        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+          loading ? '' : 'Lưu'
+        }}</el-button>
       </div>
+    </div>
   </el-drawer>
 </template>
 

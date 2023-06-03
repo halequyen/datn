@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
-import { ElDrawer, ElMessageBox } from 'element-plus'
+import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import { formatDate } from '../../formatDate'
 
 interface Patient {
@@ -92,48 +92,67 @@ const resetForm = () => {
   }
 }
 
-const onClick = () => {
-  if (loading.value) {
-    return
+const onClick = (item: any) => {
+  const newPatient = { ...patientFromData.value }
+  console.log(newPatient)
+
+  if (newPatient._id) {
+    axios
+      .put(`http://127.0.0.1:3333/${newPatient._id}`, newPatient)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchPatients()
+        showPatientForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    axios
+      .post('http://127.0.0.1:3333', newPatient)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchPatients()
+        showPatientForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
   }
-  ElMessageBox.confirm('Bạn có muốn lưu?')
-    .then(() => {
-      loading.value = true
+}
 
-      const newPatient = { ...patientFromData.value }
-      console.log(newPatient)
-
-      if (newPatient._id) {
-        axios
-          .put(`http://127.0.0.1:3333/${newPatient._id}`, newPatient)
-          .then((response) => {
-            console.log(response.data)
-            resetForm()
-            fetchPatients()
-            showPatientForm.value = false
-            loading.value = false
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      } else {
-        axios
-          .post('http://127.0.0.1:3333', newPatient)
-          .then((response) => {
-            console.log(response.data)
-            resetForm()
-            fetchPatients()
-            showPatientForm.value = false
-            loading.value = false
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      }
+const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
     })
-    .catch(() => {
-      console.log('error')
-    })
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
 }
 
 const handleClose = () => {
@@ -141,7 +160,7 @@ const handleClose = () => {
 }
 
 const deletePatient = (patient: Patient) => {
-  ElMessageBox.confirm('Bạn có chắc chắn muốn xóa bệnh nhân này?', 'Xác nhận', {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa bệnh nhân này?', 'Xác nhận', {
     confirmButtonText: 'Xóa',
     cancelButtonText: 'Hủy',
     type: 'warning'
@@ -152,9 +171,17 @@ const deletePatient = (patient: Patient) => {
         .then((response) => {
           console.log(response.data)
           fetchPatients()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
         })
         .catch((error) => {
           console.log(error)
+          ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
         })
     })
     .catch(() => {
@@ -310,8 +337,8 @@ watch(search, () => {
       </el-form>
       <div class="patient-drawer-button">
         <el-button @click="cancelForm">Hủy bỏ</el-button>
-        <el-button type="primary" :loading="loading" @click="onClick">{{
-          loading ? 'Submitting ...' : 'Lưu'
+        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+          loading ? '' : 'Lưu'
         }}</el-button>
       </div>
     </div>

@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from "vue";
-import axios from 'axios';
-import { ElDrawer, ElMessageBox } from 'element-plus';
+import { ref, onMounted, computed, watch } from 'vue'
+import axios from 'axios'
+import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 
 interface User {
-  id: String
+  _id: String
   userName: String
   password: String
   owner: String
 }
 
 const users = ref<User[]>([])
-const search = ref("")
+const search = ref('')
 const showUserForm = ref(false)
 const loading = ref(false)
 const pageSize = ref(10)
@@ -19,18 +19,18 @@ const currentPage = ref(1)
 const pagingData = ref<User[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+let timer: ReturnType<typeof setTimeout> | undefined
 
 const userFromData = ref<User>({
-  id: '',
+  _id: '',
   userName: '',
   password: '',
-  owner: '',
+  owner: ''
 })
 
 const fetchUsers = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:3333/user")
+    const response = await axios.get('http://127.0.0.1:3333/user')
     users.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
     console.log(response)
@@ -41,9 +41,7 @@ const fetchUsers = async () => {
 
 const filterTableData = computed(() =>
   users.value.filter(
-    (data) =>
-      !search.value ||
-      data.userName.toLowerCase().includes(search.value.toLowerCase())
+    (data) => !search.value || data.userName.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
@@ -55,33 +53,115 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
   pagingData.value = filterTableData.value.slice(startIndex, endIndex)
 }
 
+const resetForm = () => {
+  userFromData.value = {
+    _id: '',
+    userName: '',
+    password: '',
+    owner: ''
+  }
+}
+
 const openUserForm = (user: User) => {
   showUserForm.value = true
   userFromData.value = { ...user }
+}
+
+const onClick = (item: any) => {
+  const newUser = { ...userFromData.value }
+  console.log(newUser)
+
+  if (newUser._id) {
+    axios
+      .put(`http://127.0.0.1:3333/user/${newUser._id}`, newUser)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchUsers()
+        showUserForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    axios
+      .post('http://127.0.0.1:3333/user', newUser)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchUsers()
+        showUserForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  }
+}
+
+const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
+    })
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
 }
 
 const handleClose = () => {
   ruleFormRef.value!.close()
 }
 
-const onClick = (done: () => void) => {
-  if (loading.value) {
-    return
-  }
-  ElMessageBox.confirm('Do you want to submit?')
+const deleteUser = (user: User) => {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa tài khoản này?', 'Xác nhận', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning'
+  })
     .then(() => {
-      loading.value = true
-      timer = setTimeout(() => {
-        done()
-        setTimeout(() => {
-          loading.value = false
-        }, 400)
-      }, 2000)
+      axios
+        .delete(`http://127.0.0.1:3333/user/${user._id}`)
+        .then((response) => {
+          console.log(response.data)
+          fetchUsers()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+          ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+        })
     })
     .catch(() => {
-      console.log('error');
-    }
-  )
+      console.log('Hủy bỏ xóa tài khoản')
+    })
 }
 
 const cancelForm = () => {
@@ -110,6 +190,10 @@ watch(search, () => {
         prefix-icon="el-icon-search"
         placeholder="Nhập tên đăng nhập"
       />
+      <div class="d-flex add-icon">
+        <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openUserForm" />
+        <div class="title-add">Thêm</div>
+      </div>
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
@@ -132,6 +216,7 @@ watch(search, () => {
             <font-awesome-icon
               class="font-awesome-icon"
               icon="fa-regular fa-trash-can"
+              @click="deleteUser(scope.row)"
             />
           </template>
         </el-table-column>
@@ -155,37 +240,35 @@ watch(search, () => {
   </el-main>
 
   <el-drawer
-      ref="ruleFormRef"
-      v-model="showUserForm"
-      :before-close="handleClose"
-      direction="rtl"
-      class="user-drawer"
-      size="50%"
-    >
+    ref="ruleFormRef"
+    v-model="showUserForm"
+    :before-close="handleClose"
+    direction="rtl"
+    class="user-drawer"
+    size="50%"
+  >
     <template #header>
-      <div class="user-drawer-title">
-        Thông tin tài khoản
-      </div>
+      <div class="user-drawer-title">Thông tin tài khoản</div>
     </template>
-      <div class="demo-drawer__content">
-        <el-form :model="userFromData" label-width="140px">
-          <el-form-item label="Tên đăng nhập" prop="userName" class="user-form-item">
-            <el-input v-model="userFromData.userName"></el-input>
-          </el-form-item>
-          <el-form-item label="Mật khẩu" prop="password" class="user-form-item">
-            <el-input v-model="userFromData.password"></el-input>
-          </el-form-item>
-          <el-form-item label="Chủ sở hữu" prop="owner" class="user-form-item">
-            <el-input v-model="userFromData.owner"></el-input>
-          </el-form-item>
-        </el-form>
-        <div class="user-drawer-button">
-          <el-button @click="cancelForm">Hủy bỏ</el-button>
-          <el-button type="primary" :loading="loading" @click="onClick">{{
-            loading ? 'Submitting ...' : 'Lưu'
-          }}</el-button>
-        </div>
+    <div class="demo-drawer__content">
+      <el-form :model="userFromData" label-width="140px">
+        <el-form-item label="Tên đăng nhập" prop="userName" class="user-form-item">
+          <el-input v-model="userFromData.userName"></el-input>
+        </el-form-item>
+        <el-form-item label="Mật khẩu" prop="password" class="user-form-item">
+          <el-input v-model="userFromData.password"></el-input>
+        </el-form-item>
+        <el-form-item label="Chủ sở hữu" prop="owner" class="user-form-item">
+          <el-input v-model="userFromData.owner"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="user-drawer-button">
+        <el-button @click="cancelForm">Hủy bỏ</el-button>
+        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+          loading ? '' : 'Lưu'
+        }}</el-button>
       </div>
+    </div>
   </el-drawer>
 </template>
 

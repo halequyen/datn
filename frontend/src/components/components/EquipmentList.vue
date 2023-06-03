@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
-import { ElDrawer, ElMessageBox } from 'element-plus'
+import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 
 interface Equipment {
   _id: String
@@ -57,11 +57,6 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
   pagingData.value = filterTableData.value.slice(startIndex, endIndex)
 }
 
-const openEquipmentForm = (equipment: Equipment) => {
-  showEquipmentForm.value = true
-  equipmentFromData.value = { ...equipment }
-}
-
 const resetForm = () => {
   equipmentFromData.value = {
     _id: '',
@@ -73,56 +68,80 @@ const resetForm = () => {
   }
 }
 
-const onClick = (done: () => void) => {
-  if (loading.value) {
-    return
-  }
-  ElMessageBox.confirm('Bạn có muốn lưu?')
-    .then(() => {
-      loading.value = true
-      
-      const newEquipment = { ...equipmentFromData.value }
-      console.log(newEquipment);
-      
-      if (newEquipment._id) {
-        axios
-          .put(`http://127.0.0.1:3333/equipment/${newEquipment._id}`, newEquipment)
-          .then((response) => {
-            console.log(response.data)
-            resetForm()
-            fetchEquipments()
-            showEquipmentForm.value = false
-            loading.value = false
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      } else {
-        axios
-          .post('http://127.0.0.1:3333/equipment', newEquipment)
-          .then((response) => {
-            console.log(response.data)
-            resetForm()
-            fetchEquipments()
-            showEquipmentForm.value = false
-            loading.value = false
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      }
-  })
-  .catch(() => {
+const openEquipmentForm = (equipment: Equipment) => {
+  showEquipmentForm.value = true
+  equipmentFromData.value = { ...equipment }
+}
+
+const onClick = (item: any) => {
+  const newEquipment = { ...equipmentFromData.value }
+  console.log(newEquipment)
+
+  if (newEquipment._id) {
+    axios
+      .put(`http://127.0.0.1:3333/equipment/${newEquipment._id}`, newEquipment)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchEquipments()
+        showEquipmentForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    axios
+      .post('http://127.0.0.1:3333/equipment', newEquipment)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchEquipments()
+        showEquipmentForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+    }
+}
+
+const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
+    })
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
     console.log('error')
-  })
+  }
 }
 
 const handleClose = () => {
   ruleFormRef.value!.close()
 }
 
-const deleteEquipment = (equipment: Equipment) => {
-  ElMessageBox.confirm('Bạn có chắc chắn muốn xóa thiết bị này?', 'Xác nhận', {
+const HandleDeleteEquipment = (equipment: Equipment) => {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa thiết bị này?', 'Xác nhận', {
     confirmButtonText: 'Xóa',
     cancelButtonText: 'Hủy',
     type: 'warning'
@@ -133,9 +152,17 @@ const deleteEquipment = (equipment: Equipment) => {
         .then((response) => {
           console.log(response.data)
           fetchEquipments()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
         })
         .catch((error) => {
           console.log(error)
+          ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
         })
     })
     .catch(() => {
@@ -194,7 +221,11 @@ watch(search, () => {
               icon="fa-solid fa-pencil"
               @click="openEquipmentForm(scope.row)"
             />
-            <font-awesome-icon @click="deleteEquipment(scope.row)" class="font-awesome-icon" icon="fa-regular fa-trash-can" />
+            <font-awesome-icon
+              @click="HandleDeleteEquipment(scope.row)"
+              class="font-awesome-icon"
+              icon="fa-regular fa-trash-can"
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -249,9 +280,9 @@ watch(search, () => {
         </el-form-item>
       </el-form>
       <div class="equipment-drawer-button">
-        <el-button @click="cancelForm">Hủy bỏ</el-button>
-        <el-button type="primary" :loading="loading" @click="onClick">{{
-          loading ? 'Submitting ...' : 'Lưu'
+        <el-button @click="cancelForm">Hủy</el-button>
+        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+          loading ? '' : 'Lưu'
         }}</el-button>
       </div>
     </div>

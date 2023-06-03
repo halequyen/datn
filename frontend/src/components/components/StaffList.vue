@@ -1,22 +1,22 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from "vue";
-import axios from 'axios';
-import { ElDrawer, ElMessageBox } from 'element-plus'
+import { ref, onMounted, computed, watch } from 'vue'
+import axios from 'axios'
+import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 
 interface Staff {
-  id: String,
-  staffCode: String;
-  name: String;
-  gender: String;
-  dob: String;
-  phone: String;
-  jobTitle: String;
-  email: String;
-  state: String;
+  _id: String
+  staffCode: String
+  name: String
+  gender: String
+  dob: String
+  phone: String
+  jobTitle: String
+  email: String
+  state: String
 }
 
 const staffs = ref<Staff[]>([])
-const search = ref("")
+const search = ref('')
 const showStaffForm = ref(false)
 const loading = ref(false)
 const pageSize = ref(10)
@@ -24,10 +24,10 @@ const currentPage = ref(1)
 const pagingData = ref<Staff[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+let timer: ReturnType<typeof setTimeout> | undefined
 
 const staffFromData = ref<Staff>({
-  id: '',
+  _id: '',
   staffCode: '',
   name: '',
   gender: '',
@@ -35,25 +35,23 @@ const staffFromData = ref<Staff>({
   phone: '',
   jobTitle: '',
   email: '',
-  state: '',
+  state: ''
 })
 
 const fetchStaffs = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:3333/staff")
+    const response = await axios.get('http://127.0.0.1:3333/staff')
     staffs.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
     console.log(response)
   } catch (error) {
     console.log(error)
   }
-};
+}
 
 const filterTableData = computed(() =>
   staffs.value.filter(
-    (data) =>
-      !search.value ||
-      data.name.toLowerCase().includes(search.value.toLowerCase())
+    (data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
@@ -65,33 +63,120 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
   pagingData.value = filterTableData.value.slice(startIndex, endIndex)
 }
 
+const resetForm = () => {
+  staffFromData.value = {
+    _id: '',
+    staffCode: '',
+    name: '',
+    gender: '',
+    dob: '',
+    phone: '',
+    jobTitle: '',
+    email: '',
+    state: ''
+  }
+}
+
 const openStaffForm = (staff: Staff) => {
   showStaffForm.value = true
   staffFromData.value = { ...staff }
+}
+
+const onClick = (item: any) => {
+  const newStaff = { ...staffFromData.value }
+  console.log(newStaff)
+
+  if (newStaff._id) {
+    axios
+      .put(`http://127.0.0.1:3333/staff/${newStaff._id}`, newStaff)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchStaffs()
+        showStaffForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    axios
+      .post('http://127.0.0.1:3333/staff', newStaff)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchStaffs()
+        showStaffForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  }
+}
+
+const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
+    })
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
 }
 
 const handleClose = () => {
   ruleFormRef.value!.close()
 }
 
-const onClick = (done: () => void) => {
-  if (loading.value) {
-    return
-  }
-  ElMessageBox.confirm('Do you want to submit?')
+const deleteStaff = (staff: Staff) => {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa nhân viên này?', 'Xác nhận', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning'
+  })
     .then(() => {
-      loading.value = true
-      timer = setTimeout(() => {
-        done()
-        setTimeout(() => {
-          loading.value = false
-        }, 400)
-      }, 2000)
+      axios
+        .delete(`http://127.0.0.1:3333/staff/${staff._id}`)
+        .then((response) => {
+          console.log(response.data)
+          fetchStaffs()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+          ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+        })
     })
     .catch(() => {
-      console.log('error');
-    }
-  )
+      console.log('Hủy bỏ xóa nhân viên')
+    })
 }
 
 const cancelForm = () => {
@@ -119,6 +204,10 @@ watch(search, () => {
         prefix-icon="el-icon-search"
         placeholder="Nhập tên nhân viên"
       />
+      <div class="d-flex add-icon">
+        <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openStaffForm" />
+        <div class="title-add">Thêm</div>
+      </div>
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
@@ -146,6 +235,7 @@ watch(search, () => {
             <font-awesome-icon
               class="font-awesome-icon"
               icon="fa-regular fa-trash-can"
+              @click="deleteStaff(scope.row)"
             />
           </template>
         </el-table-column>
@@ -169,55 +259,52 @@ watch(search, () => {
   </el-main>
 
   <el-drawer
-      ref="ruleFormRef"
-      v-model="showStaffForm"
-      :before-close="handleClose"
-      direction="rtl"
-      class="staff-drawer"
-      size="50%"
-    >
+    ref="ruleFormRef"
+    v-model="showStaffForm"
+    :before-close="handleClose"
+    direction="rtl"
+    class="staff-drawer"
+    size="50%"
+  >
     <template #header>
-      <div class="staff-drawer-title">
-        Thông tin nhân viên
-      </div>
+      <div class="staff-drawer-title">Thông tin nhân viên</div>
     </template>
-      <div class="demo-drawer__content">
-        <el-form :model="staffFromData" label-width="140px">
-          <el-form-item label="Mã nhân viên" prop="staffCode" class="staff-form-item">
-            <el-input v-model="staffFromData.staffCode"></el-input>
-          </el-form-item>
-          <el-form-item label="Tên nhân viên" prop="name" class="staff-form-item">
-            <el-input v-model="staffFromData.name"></el-input>
-          </el-form-item>
-          <el-form-item label="Giới tính" prop="gender" class="staff-form-item">
-            <el-input v-model="staffFromData.gender"></el-input>
-          </el-form-item>
-          <el-form-item label="Ngày sinh" prop="dob" class="staff-form-item">
-            <el-input v-model="staffFromData.dob"></el-input>
-          </el-form-item>
-          <el-form-item label="Số điện thoại" prop="phone" class="staff-form-item">
-            <el-input v-model="staffFromData.phone"></el-input>
-          </el-form-item>
-          <el-form-item label="Chức vụ" prop="jobTitle" class="staff-form-item">
-            <el-input v-model="staffFromData.jobTitle"></el-input>
-          </el-form-item>
-          <el-form-item label="Email" prop="email" class="staff-form-item">
-            <el-input v-model="staffFromData.email"></el-input>
-          </el-form-item>
-          <el-form-item label="Trạng thái" prop="state" class="staff-form-item">
-            <el-input v-model="staffFromData.state"></el-input>
-          </el-form-item>
-        </el-form>
-        <div class="staff-drawer-button">
-          <el-button @click="cancelForm">Hủy bỏ</el-button>
-          <el-button type="primary" :loading="loading" @click="onClick">{{
-            loading ? 'Submitting ...' : 'Lưu'
-          }}</el-button>
-        </div>
+    <div class="demo-drawer__content">
+      <el-form :model="staffFromData" label-width="140px">
+        <el-form-item label="Mã nhân viên" prop="staffCode" class="staff-form-item">
+          <el-input v-model="staffFromData.staffCode"></el-input>
+        </el-form-item>
+        <el-form-item label="Tên nhân viên" prop="name" class="staff-form-item">
+          <el-input v-model="staffFromData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="Giới tính" prop="gender" class="staff-form-item">
+          <el-input v-model="staffFromData.gender"></el-input>
+        </el-form-item>
+        <el-form-item label="Ngày sinh" prop="dob" class="staff-form-item">
+          <el-input v-model="staffFromData.dob"></el-input>
+        </el-form-item>
+        <el-form-item label="Số điện thoại" prop="phone" class="staff-form-item">
+          <el-input v-model="staffFromData.phone"></el-input>
+        </el-form-item>
+        <el-form-item label="Chức vụ" prop="jobTitle" class="staff-form-item">
+          <el-input v-model="staffFromData.jobTitle"></el-input>
+        </el-form-item>
+        <el-form-item label="Email" prop="email" class="staff-form-item">
+          <el-input v-model="staffFromData.email"></el-input>
+        </el-form-item>
+        <el-form-item label="Trạng thái" prop="state" class="staff-form-item">
+          <el-input v-model="staffFromData.state"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="staff-drawer-button">
+        <el-button @click="cancelForm">Hủy bỏ</el-button>
+        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+          loading ? '' : 'Lưu'
+        }}</el-button>
       </div>
+    </div>
   </el-drawer>
 </template>
-
 
 <style lang="scss" scoped>
 h1 {
