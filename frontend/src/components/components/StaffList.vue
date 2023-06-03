@@ -1,0 +1,256 @@
+<script lang="ts" setup>
+import { ref, onMounted, computed, watch } from "vue";
+import axios from 'axios';
+import { ElDrawer, ElMessageBox } from 'element-plus'
+
+interface Staff {
+  id: String,
+  staffCode: String;
+  name: String;
+  gender: String;
+  dob: String;
+  phone: String;
+  jobTitle: String;
+  email: String;
+  state: String;
+}
+
+const staffs = ref<Staff[]>([])
+const search = ref("")
+const showStaffForm = ref(false)
+const loading = ref(false)
+const pageSize = ref(10)
+const currentPage = ref(1)
+const pagingData = ref<Staff[]>([])
+const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
+
+let timer: ReturnType<typeof setTimeout> | undefined;
+
+const staffFromData = ref<Staff>({
+  id: '',
+  staffCode: '',
+  name: '',
+  gender: '',
+  dob: '',
+  phone: '',
+  jobTitle: '',
+  email: '',
+  state: '',
+})
+
+const fetchStaffs = async () => {
+  try {
+    const response = await axios.get("http://127.0.0.1:3333/staff")
+    staffs.value = response.data
+    pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    console.log(response)
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+const filterTableData = computed(() =>
+  staffs.value.filter(
+    (data) =>
+      !search.value ||
+      data.name.toLowerCase().includes(search.value.toLowerCase())
+  )
+)
+
+const onPageChange = async (pageNumber: number): Promise<void> => {
+  currentPage.value = pageNumber
+  const rowsNumber = pageSize.value
+  const startIndex = (pageNumber - 1) * rowsNumber
+  const endIndex = pageNumber * rowsNumber
+  pagingData.value = filterTableData.value.slice(startIndex, endIndex)
+}
+
+const openStaffForm = (staff: Staff) => {
+  showStaffForm.value = true
+  staffFromData.value = { ...staff }
+}
+
+const handleClose = () => {
+  ruleFormRef.value!.close()
+}
+
+const onClick = (done: () => void) => {
+  if (loading.value) {
+    return
+  }
+  ElMessageBox.confirm('Do you want to submit?')
+    .then(() => {
+      loading.value = true
+      timer = setTimeout(() => {
+        done()
+        setTimeout(() => {
+          loading.value = false
+        }, 400)
+      }, 2000)
+    })
+    .catch(() => {
+      console.log('error');
+    }
+  )
+}
+
+const cancelForm = () => {
+  loading.value = false
+  showStaffForm.value = false
+  clearTimeout(timer)
+}
+
+onMounted(() => {
+  fetchStaffs()
+})
+
+watch(search, () => {
+  currentPage.value = 1
+  pagingData.value = filterTableData.value.slice(0, pageSize.value)
+})
+</script>
+<template>
+  <el-main class="staff-list-main">
+    <h1>DANH SÁCH NHÂN VIÊN</h1>
+    <div>
+      <el-input
+        v-model="search"
+        class="input-search"
+        prefix-icon="el-icon-search"
+        placeholder="Nhập tên nhân viên"
+      />
+    </div>
+    <el-scrollbar>
+      <el-table :data="pagingData">
+        <el-table-column label="Mã nhân viên" min-width="100">
+          <template #default="scope">
+            <div class="staff-code primary-color">
+              {{ scope.row.staffCode }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="name" label="Tên nhân viên" min-width="170" />
+        <el-table-column prop="gender" label="Giới tính" min-width="80" />
+        <el-table-column prop="jobTitle" label="Chức vụ" min-width="170" />
+        <el-table-column prop="dob" label="Ngày sinh" min-width="110" />
+        <el-table-column prop="phone" label="Số điện thoại" min-width="120" />
+        <el-table-column prop="email" label="Email" min-width="150" />
+        <el-table-column prop="state" label="Trạng thái" min-width="120" />
+        <el-table-column fixed="right" width="100">
+          <template #default="scope">
+            <font-awesome-icon
+              class="font-awesome-icon"
+              icon="fa-solid fa-pencil"
+              @click="openStaffForm(scope.row)"
+            />
+            <font-awesome-icon
+              class="font-awesome-icon"
+              icon="fa-regular fa-trash-can"
+            />
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-scrollbar>
+    <div class="d-flex">
+      <div class="pagination-total">
+        <span>Số lượng: {{ filterTableData.length }}</span>
+      </div>
+      <div class="pagination-button">
+        <el-pagination
+          v-model:page-size="pageSize"
+          v-model:current-page="currentPage"
+          :total="filterTableData.length"
+          background
+          layout="prev, pager, next"
+          @current-change="onPageChange"
+        />
+      </div>
+    </div>
+  </el-main>
+
+  <el-drawer
+      ref="ruleFormRef"
+      v-model="showStaffForm"
+      :before-close="handleClose"
+      direction="rtl"
+      class="staff-drawer"
+      size="50%"
+    >
+    <template #header>
+      <div class="staff-drawer-title">
+        Thông tin nhân viên
+      </div>
+    </template>
+      <div class="demo-drawer__content">
+        <el-form :model="staffFromData" label-width="140px">
+          <el-form-item label="Mã nhân viên" prop="staffCode" class="staff-form-item">
+            <el-input v-model="staffFromData.staffCode"></el-input>
+          </el-form-item>
+          <el-form-item label="Tên nhân viên" prop="name" class="staff-form-item">
+            <el-input v-model="staffFromData.name"></el-input>
+          </el-form-item>
+          <el-form-item label="Giới tính" prop="gender" class="staff-form-item">
+            <el-input v-model="staffFromData.gender"></el-input>
+          </el-form-item>
+          <el-form-item label="Ngày sinh" prop="dob" class="staff-form-item">
+            <el-input v-model="staffFromData.dob"></el-input>
+          </el-form-item>
+          <el-form-item label="Số điện thoại" prop="phone" class="staff-form-item">
+            <el-input v-model="staffFromData.phone"></el-input>
+          </el-form-item>
+          <el-form-item label="Chức vụ" prop="jobTitle" class="staff-form-item">
+            <el-input v-model="staffFromData.jobTitle"></el-input>
+          </el-form-item>
+          <el-form-item label="Email" prop="email" class="staff-form-item">
+            <el-input v-model="staffFromData.email"></el-input>
+          </el-form-item>
+          <el-form-item label="Trạng thái" prop="state" class="staff-form-item">
+            <el-input v-model="staffFromData.state"></el-input>
+          </el-form-item>
+        </el-form>
+        <div class="staff-drawer-button">
+          <el-button @click="cancelForm">Hủy bỏ</el-button>
+          <el-button type="primary" :loading="loading" @click="onClick">{{
+            loading ? 'Submitting ...' : 'Lưu'
+          }}</el-button>
+        </div>
+      </div>
+  </el-drawer>
+</template>
+
+
+<style lang="scss" scoped>
+h1 {
+  margin-bottom: 20px;
+  font-size: 200%;
+}
+.input-search {
+  width: 250px;
+  margin-bottom: 10px;
+}
+.staff-code {
+  cursor: pointer;
+  font-weight: 700;
+}
+.font-awesome-icon {
+  padding-left: 10px;
+  color: #ee402d;
+}
+
+.staff-form-item {
+  width: 100%;
+}
+
+.staff-drawer {
+  .staff-drawer-title {
+    font-size: 200%;
+    font-weight: bold;
+    color: #000;
+  }
+
+  .staff-drawer-button {
+    position: absolute;
+    right: 20px;
+  }
+}
+</style>
