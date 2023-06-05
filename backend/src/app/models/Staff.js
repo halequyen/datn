@@ -3,7 +3,6 @@ const Schema = mongoose.Schema
 
 const Staff = new Schema({
     id: { type: String },
-    staffCode: { type: String },
     name: { type: String },
     gender: { type: String },
     dob: { type: String },

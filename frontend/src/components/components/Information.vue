@@ -145,11 +145,11 @@ h1 {
   font-size: 200%;
 }
 .information-form-item {
-  width: 1000px;
+  width: 100%;
 }
 
-.material-drawer-button {
+.information-drawer-button {
   position: absolute;
-  right: 20px;
+  right: 60px;
 }
 </style>

@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
+import { formatExpense } from '../../format'
 
 interface MedicinePrice {
   _id: String
@@ -41,6 +42,7 @@ const fetchMedicinePrices = async () => {
     const response = await axios.get('http://127.0.0.1:3333/medicine_price')
     medicinePrices.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    onPageChange(currentPage.value) 
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -219,7 +221,13 @@ watch(search, () => {
         <el-table-column prop="activeSubstance" label="Hoạt chất" min-width="220" />
         <el-table-column prop="unit" label="ĐVT" min-width="90" />
         <el-table-column prop="concentration" label="Hàm lượng/Nồng độ" min-width="170" />
-        <el-table-column prop="price" label="Đơn giá" min-width="150" />
+        <el-table-column label="Đơn giá" min-width="150" >
+          <template #default="scope">
+            <div>
+              {{ formatExpense(parseInt(scope.row.price)) }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column fixed="right" width="100">
           <template #default="scope">
             <font-awesome-icon

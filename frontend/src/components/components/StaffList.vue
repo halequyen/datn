@@ -2,10 +2,15 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
+import {
+  formatDate,
+  staffStateColor,
+  staffState,
+  gender,
+} from '../../format'
 
 interface Staff {
   _id: String
-  staffCode: String
   name: String
   gender: String
   dob: String
@@ -28,7 +33,6 @@ let timer: ReturnType<typeof setTimeout> | undefined
 
 const staffFromData = ref<Staff>({
   _id: '',
-  staffCode: '',
   name: '',
   gender: '',
   dob: '',
@@ -43,6 +47,7 @@ const fetchStaffs = async () => {
     const response = await axios.get('http://127.0.0.1:3333/staff')
     staffs.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    onPageChange(currentPage.value) 
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -51,7 +56,7 @@ const fetchStaffs = async () => {
 
 const filterTableData = computed(() =>
   staffs.value.filter(
-    (data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
+    (data) => !search.value || data.phone.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
@@ -66,7 +71,6 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
 const resetForm = () => {
   staffFromData.value = {
     _id: '',
-    staffCode: '',
     name: '',
     gender: '',
     dob: '',
@@ -202,7 +206,7 @@ watch(search, () => {
         v-model="search"
         class="input-search"
         prefix-icon="el-icon-search"
-        placeholder="Nhập tên nhân viên"
+        placeholder="Nhập số điện thoại"
       />
       <div class="d-flex add-icon">
         <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openStaffForm" />
@@ -211,20 +215,42 @@ watch(search, () => {
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
-        <el-table-column label="Mã nhân viên" min-width="100">
+        <el-table-column label="Tên nhân viên" min-width="180">
           <template #default="scope">
             <div class="staff-code primary-color">
-              {{ scope.row.staffCode }}
+              {{ scope.row.name }}
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="Tên nhân viên" min-width="170" />
-        <el-table-column prop="gender" label="Giới tính" min-width="80" />
+        <el-table-column label="Giới tính" min-width="90">
+          <template #default="scope">
+            <div>
+              {{ gender[scope.row.gender] }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="jobTitle" label="Chức vụ" min-width="170" />
-        <el-table-column prop="dob" label="Ngày sinh" min-width="110" />
+        <el-table-column label="Ngày sinh" min-width="110">
+          <template #default="scope">
+            <div>
+              {{ formatDate(scope.row.dob) }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="phone" label="Số điện thoại" min-width="120" />
         <el-table-column prop="email" label="Email" min-width="150" />
-        <el-table-column prop="state" label="Trạng thái" min-width="120" />
+        <el-table-column prop="state" label="Trạng thái" min-width="140">
+          <template #default="scope">
+            <div
+              :style="{
+                color: staffStateColor[scope.row.state],
+                fontWeight: 700
+              }"
+            >
+              {{ staffState[scope.row.state] }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column fixed="right" width="100">
           <template #default="scope">
             <font-awesome-icon
@@ -271,14 +297,15 @@ watch(search, () => {
     </template>
     <div class="demo-drawer__content">
       <el-form :model="staffFromData" label-width="140px">
-        <el-form-item label="Mã nhân viên" prop="staffCode" class="staff-form-item">
-          <el-input v-model="staffFromData.staffCode"></el-input>
-        </el-form-item>
         <el-form-item label="Tên nhân viên" prop="name" class="staff-form-item">
           <el-input v-model="staffFromData.name"></el-input>
         </el-form-item>
-        <el-form-item label="Giới tính" prop="gender" class="staff-form-item">
-          <el-input v-model="staffFromData.gender"></el-input>
+        <el-form-item label="Giới tính" class="staff-form-item" width="100%">
+          <el-select v-model="staffFromData.gender" placeholder="Chọn giới tính">
+            <el-option label="Nam" :value="'0'" />
+            <el-option label="Nữ" :value="'1'" />
+            <el-option label="Khác" :value="'2'" />
+          </el-select>
         </el-form-item>
         <el-form-item label="Ngày sinh" prop="dob" class="staff-form-item">
           <el-input v-model="staffFromData.dob"></el-input>
@@ -292,8 +319,11 @@ watch(search, () => {
         <el-form-item label="Email" prop="email" class="staff-form-item">
           <el-input v-model="staffFromData.email"></el-input>
         </el-form-item>
-        <el-form-item label="Trạng thái" prop="state" class="staff-form-item">
-          <el-input v-model="staffFromData.state"></el-input>
+        <el-form-item label="Trạng thái" class="staff-form-item">
+          <el-select v-model="staffFromData.state" placeholder="Chọn trạng thái">
+            <el-option label="Đang hoạt động" :value="'0'" />
+            <el-option label="Đã thôi việc" :value="'1'" />
+          </el-select>
         </el-form-item>
       </el-form>
       <div class="staff-drawer-button">

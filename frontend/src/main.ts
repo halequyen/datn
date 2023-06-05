@@ -18,7 +18,11 @@ import { faTrashCan } from '@fortawesome/free-regular-svg-icons'
 import { faGear } from '@fortawesome/free-solid-svg-icons'
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faEye } from '@fortawesome/free-solid-svg-icons'
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faHouseChimneyMedical, faImagePortrait, faFileInvoiceDollar, faScrewdriverWrench, faPencil, faTrashCan, faGear, faMagnifyingGlass, faPlus)
+
+
+library.add(faHouseChimneyMedical, faImagePortrait, faFileInvoiceDollar, faScrewdriverWrench, faPencil, faTrashCan, faGear, faMagnifyingGlass, faPlus, faEye, faEyeSlash)
 
 createApp(App).use(ElementPlus).component('font-awesome-icon', FontAwesomeIcon).use(router).use(createPinia()).mount('#app')

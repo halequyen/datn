@@ -7,7 +7,13 @@ interface User {
   _id: String
   userName: String
   password: String
+  ownerId: String
   owner: String
+}
+
+interface Staff {
+  _id: String
+  name: String
 }
 
 const users = ref<User[]>([])
@@ -18,6 +24,10 @@ const pageSize = ref(10)
 const currentPage = ref(1)
 const pagingData = ref<User[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
+const staffs = ref<Staff[]>([])
+const selectedStaff = ref<Staff[]>([])
+const selectedStaffId = ref<string[]>([])
+const showPassword = ref(false)
 
 let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -25,6 +35,7 @@ const userFromData = ref<User>({
   _id: '',
   userName: '',
   password: '',
+  ownerId: '',
   owner: ''
 })
 
@@ -33,6 +44,17 @@ const fetchUsers = async () => {
     const response = await axios.get('http://127.0.0.1:3333/user')
     users.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    onPageChange(currentPage.value)
+    console.log(response)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const fetchStaffs = async () => {
+  try {
+    const response = await axios.get('http://127.0.0.1:3333/staff')
+    staffs.value = response.data
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -58,18 +80,35 @@ const resetForm = () => {
     _id: '',
     userName: '',
     password: '',
+    ownerId: '',
     owner: ''
   }
+}
+
+const onChangeOwner = () => {
+  const selectedStaffNames = staffs.value
+    .filter((staff) => selectedStaffId.value.includes(staff._id.toString()))
+    .map((staff) => staff.name)
+  userFromData.value.owner = selectedStaffNames.join(', ')
 }
 
 const openUserForm = (user: User) => {
   showUserForm.value = true
   userFromData.value = { ...user }
+  selectedStaffId.value = user.ownerId.split(', ')
+  selectedStaff.value = staffs.value.filter((staff) =>
+    selectedStaffId.value.includes(staff._id.toString())
+  )
 }
 
 const onClick = (item: any) => {
   const newUser = { ...userFromData.value }
   console.log(newUser)
+  newUser.ownerId = selectedStaffId.value.join(', ')
+  newUser.owner = staffs.value
+    .filter((staff) => selectedStaffId.value.includes(staff._id.toString()))
+    .map((staff) => staff.name)
+    .join(', ')
 
   if (newUser._id) {
     axios
@@ -154,9 +193,9 @@ const deleteUser = (user: User) => {
         .catch((error) => {
           console.log(error)
           ElNotification({
-          title: 'Thất bại',
-          type: 'error'
-        })
+            title: 'Thất bại',
+            type: 'error'
+          })
         })
     })
     .catch(() => {
@@ -172,11 +211,21 @@ const cancelForm = () => {
 
 onMounted(() => {
   fetchUsers()
+  fetchStaffs()
 })
 
 watch(search, () => {
   currentPage.value = 1
   pagingData.value = filterTableData.value.slice(0, pageSize.value)
+})
+
+watch(staffs, () => {
+  users.value.forEach((user) => {
+    const selectedStaffNames = staffs.value
+      .filter((staff) => user.ownerId.includes(staff._id.toString()))
+      .map((staff) => staff.name)
+    user.owner = selectedStaffNames.join(', ')
+  })
 })
 </script>
 
@@ -255,11 +304,26 @@ watch(search, () => {
         <el-form-item label="Tên đăng nhập" prop="userName" class="user-form-item">
           <el-input v-model="userFromData.userName"></el-input>
         </el-form-item>
-        <el-form-item label="Mật khẩu" prop="password" class="user-form-item">
-          <el-input v-model="userFromData.password"></el-input>
+        <el-form-item label="Mật khẩu" class="user-form-item">
+          <el-input type="password" show-password="showPassword" v-model="userFromData.password"></el-input>
         </el-form-item>
-        <el-form-item label="Chủ sở hữu" prop="owner" class="user-form-item">
-          <el-input v-model="userFromData.owner"></el-input>
+        <el-form-item label="Chủ sở hữu" class="user-form-item">
+          <el-select
+            v-model="selectedStaffId"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            :reserve-keyword="false"
+            placeholder="Chọn nhân viên"
+          >
+            <el-option
+              v-for="item in staffs"
+              :key="item._id"
+              :label="item.name"
+              :value="item._id"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <div class="user-drawer-button">

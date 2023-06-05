@@ -2,13 +2,14 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
+import { formatExpense, formatTotalPrices } from '../../format'
 
 interface Equipment {
   _id: String
   name: String
   unit: String
   quantity: Number
-  price: String
+  price: Number
   type: String
 }
 
@@ -28,7 +29,7 @@ const equipmentFromData = ref<Equipment>({
   name: '',
   unit: '',
   quantity: 0,
-  price: '',
+  price: 0,
   type: ''
 })
 
@@ -37,6 +38,7 @@ const fetchEquipments = async () => {
     const response = await axios.get('http://127.0.0.1:3333/equipment')
     equipments.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    onPageChange(currentPage.value) 
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -63,7 +65,7 @@ const resetForm = () => {
     name: '',
     unit: '',
     quantity: 0,
-    price: '',
+    price: 0,
     type: ''
   }
 }
@@ -211,9 +213,21 @@ watch(search, () => {
           </template>
         </el-table-column>
         <el-table-column prop="unit" label="ĐVT" min-width="90" />
-        <el-table-column prop="price" label="Đơn giá" min-width="150" />
+        <el-table-column prop="price" label="Đơn giá" min-width="150" >
+          <template #default="scope">
+            <div>
+              {{ formatExpense(parseInt(scope.row.price)) }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="quantity" label="Số lượng" min-width="150" />
-        <el-table-column prop="price" label="Tổng giá trị" min-width="150" />
+        <el-table-column label="Tổng giá trị" min-width="150" >
+          <template #default="scope">
+            <div>
+              {{ formatTotalPrices(scope.row) }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column fixed="right" width="100">
           <template #default="scope">
             <font-awesome-icon

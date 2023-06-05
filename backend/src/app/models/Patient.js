@@ -3,9 +3,9 @@ const Schema = mongoose.Schema
 
 const Patient = new Schema({
     id: { type: String },
-    patientCode: { type: String },
     name: { type: String },
-    gender: { type: String },
+    gender: { type: String,
+        enum:['0', '1', '2'] },
     dob: { type: String },
     phone: { type: String },
     checkDate: { type: String },

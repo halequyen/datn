@@ -4,7 +4,7 @@ import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 
 interface Patient {
-  id: String
+  _id: String
   name: String
   phone: String
   note: String
@@ -15,16 +15,31 @@ interface Patient {
 const patients = ref<Patient[]>([])
 const search = ref('')
 const showPatientForm = ref(false)
+const loading = ref(false)
 const pageSize = ref(10)
 const currentPage = ref(1)
 const pagingData = ref<Patient[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
+const ruleScheduleFormRef = ref<InstanceType<typeof ElDrawer>>()
+const showScheduleForm = ref(false)
+
+let timer: ReturnType<typeof setTimeout> | undefined
+
+const scheduleFormData = ref<Patient>({
+  _id: '',
+  name: '',
+  phone: '',
+  note: '',
+  date: '',
+  timeSlot: ''
+})
 
 const fetchPatients = async () => {
   try {
     const response = await axios.get('http://127.0.0.1:3333/schedule')
     patients.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -33,7 +48,7 @@ const fetchPatients = async () => {
 
 const filterTableData = computed(() =>
   patients.value.filter(
-    (data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
+    (data) => !search.value || data.phone.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
@@ -51,6 +66,126 @@ const openPatientForm = () => {
 
 const handleClose = () => {
   ruleFormRef.value!.close()
+}
+
+const handleScheduleClose = () => {
+  ruleScheduleFormRef.value!.close()
+}
+
+const openScheduleForm = (patient: Patient) => {
+  showScheduleForm.value = true
+  scheduleFormData.value = { ...patient }
+}
+
+const resetForm = () => {
+  scheduleFormData.value = {
+    _id: '',
+    name: '',
+    phone: '',
+    note: '',
+    date: '',
+    timeSlot: ''
+  }
+}
+
+const onClick = (item: any) => {
+  const newSchedule = { ...scheduleFormData.value }
+  console.log(newSchedule)
+
+  if (newSchedule._id) {
+    axios
+      .put(`http://127.0.0.1:3333/schedule/${newSchedule._id}`, newSchedule)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchPatients()
+        showScheduleForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    axios
+      .post('http://127.0.0.1:3333/schedule', newSchedule)
+      .then((response) => {
+        console.log(response.data)
+        resetForm()
+        fetchPatients()
+        showScheduleForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  }
+}
+
+const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
+    })
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
+}
+
+const deleteSchedule = (schedule: Patient) => {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa đặt lịch này?', 'Xác nhận', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning'
+  })
+    .then(() => {
+      axios
+        .delete(`http://127.0.0.1:3333/schedule/${schedule._id}`)
+        .then((response) => {
+          console.log(response.data)
+          fetchPatients()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+          ElNotification({
+            title: 'Thất bại',
+            type: 'error'
+          })
+        })
+    })
+    .catch(() => {
+      console.log('Hủy bỏ xóa bệnh nhân')
+    })
+}
+
+const cancelForm = () => {
+  loading.value = false
+  showPatientForm.value = false
+  showScheduleForm.value = false
+  clearTimeout(timer)
 }
 
 onMounted(() => {
@@ -128,18 +263,36 @@ watch(search, () => {
         v-model="search"
         class="input-search"
         prefix-icon="el-icon-search"
-        placeholder="Nhập tên bệnh nhân"
+        placeholder="Nhập số điện thoại"
       />
+      <div class="d-flex add-icon-schedule">
+        <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openScheduleForm" />
+        <div class="title-add">Thêm</div>
+      </div>
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
-        <el-table-column prop="name" label="Tên bệnh nhân" min-width="140" />
+        <el-table-column label="Tên bệnh nhân" min-width="140">
+          <template #default="scope">
+            <div class="patient-name primary-color">
+              {{ scope.row.name }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="phone" label="Số điện thoại" min-width="100" />
         <el-table-column prop="note" label="Ghi chú" min-width="150" />
         <el-table-column fixed="right" width="100">
           <template #default="scope">
-            <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-pencil" />
-            <font-awesome-icon class="font-awesome-icon" icon="fa-regular fa-trash-can" />
+            <font-awesome-icon
+              class="font-awesome-icon"
+              icon="fa-solid fa-pencil"
+              @click="openScheduleForm(scope.row)"
+            />
+            <font-awesome-icon
+              class="font-awesome-icon"
+              icon="fa-regular fa-trash-can"
+              @click="deleteSchedule(scope.row)"
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -159,6 +312,38 @@ watch(search, () => {
         </div>
       </div>
     </el-scrollbar>
+  </el-drawer>
+
+  <el-drawer
+    ref="ruleScheduleFormRef"
+    v-model="showScheduleForm"
+    :before-close="handleScheduleClose"
+    direction="rtl"
+    class="patient-drawer"
+    size="35%"
+  >
+    <template #header>
+      <div class="patient-drawer-title">Thông tin đặt lịch</div>
+    </template>
+    <div class="demo-drawer__content">
+      <el-form :model="scheduleFormData" label-width="140px">
+        <el-form-item label="Tên bệnh nhân" prop="name" class="patient-form-item">
+          <el-input v-model="scheduleFormData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="Số điện thoại" prop="phone" class="patient-form-item">
+          <el-input v-model="scheduleFormData.phone"></el-input>
+        </el-form-item>
+        <el-form-item label="Ghi chú" prop="note" class="patient-form-item">
+          <el-input v-model="scheduleFormData.note"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="schedule-drawer-button">
+        <el-button @click="cancelForm">Hủy bỏ</el-button>
+        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+          loading ? '' : 'Lưu'
+        }}</el-button>
+      </div>
+    </div>
   </el-drawer>
 </template>
 
@@ -191,6 +376,11 @@ watch(search, () => {
   }
 }
 
+.patient-name {
+  cursor: pointer;
+  font-weight: 700;
+}
+
 .font-awesome-icon {
   padding-left: 10px;
   color: #ee402d;
@@ -207,6 +397,27 @@ watch(search, () => {
 .input-search {
   width: 250px;
   margin-bottom: 10px;
+}
+
+.add-icon-schedule {
+  color: red;
+  position: absolute;
+  right: 80px;
+  top: 115px;
+
+  .icon-add {
+    font-size: 120%;
+    padding: 5px;
+  }
+
+  .title-add {
+    padding: 5px;
+  }
+}
+
+.schedule-drawer-button {
+  position: absolute;
+  right: 20px;
 }
 </style>
 

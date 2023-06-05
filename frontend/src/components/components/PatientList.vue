@@ -2,11 +2,17 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
-import { formatDate } from '../../formatDate'
+import {
+  formatDate,
+  patientType,
+  patientStateColor,
+  patientState,
+  gender,
+  formatExpense
+} from '../../format'
 
 interface Patient {
   _id: String
-  patientCode: String
   name: String
   gender: String
   dob: String | Date
@@ -30,9 +36,8 @@ const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 
 let timer: ReturnType<typeof setTimeout> | undefined
 
-const patientFromData = ref<Patient>({
+const patientFormData = ref<Patient>({
   _id: '',
-  patientCode: '',
   name: '',
   gender: '',
   dob: '',
@@ -50,6 +55,7 @@ const fetchPatients = async () => {
     const response = await axios.get('http://127.0.0.1:3333')
     patients.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -58,7 +64,7 @@ const fetchPatients = async () => {
 
 const filterTableData = computed(() =>
   patients.value.filter(
-    (data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())
+    (data) => !search.value || data.phone.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
@@ -72,13 +78,12 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
 
 const openPatientForm = (patient: Patient) => {
   showPatientForm.value = true
-  patientFromData.value = { ...patient }
+  patientFormData.value = { ...patient }
 }
 
 const resetForm = () => {
-  patientFromData.value = {
+  patientFormData.value = {
     _id: '',
-    patientCode: '',
     name: '',
     gender: '',
     dob: '',
@@ -93,7 +98,7 @@ const resetForm = () => {
 }
 
 const onClick = (item: any) => {
-  const newPatient = { ...patientFromData.value }
+  const newPatient = { ...patientFormData.value }
   console.log(newPatient)
 
   if (newPatient._id) {
@@ -179,9 +184,9 @@ const deletePatient = (patient: Patient) => {
         .catch((error) => {
           console.log(error)
           ElNotification({
-          title: 'Thất bại',
-          type: 'error'
-        })
+            title: 'Thất bại',
+            type: 'error'
+          })
         })
     })
     .catch(() => {
@@ -198,6 +203,7 @@ const cancelForm = () => {
 onMounted(() => {
   fetchPatients()
   // pagingData.value = filterTableData.value.slice(0, pageSize.value)
+  // ruleFormRef.value = ref<InstanceType<typeof ElDrawer>>()
 })
 
 watch(search, () => {
@@ -214,7 +220,7 @@ watch(search, () => {
         v-model="search"
         class="input-search"
         prefix-icon="el-icon-search"
-        placeholder="Nhập tên bệnh nhân"
+        placeholder="Nhập số điện thoại"
       />
       <div class="d-flex add-icon">
         <font-awesome-icon class="icon-add" icon="fa-solid fa-plus" @click="openPatientForm" />
@@ -223,15 +229,20 @@ watch(search, () => {
     </div>
     <el-scrollbar>
       <el-table :data="pagingData">
-        <el-table-column label="Mã bệnh nhân" min-width="140">
+        <el-table-column label="Tên bệnh nhân" min-width="200">
           <template #default="scope">
-            <div class="patient-code primary-color">
-              {{ scope.row.patientCode }}
+            <div class="patient-name primary-color">
+              {{ scope.row.name }}
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="Tên bệnh nhân" min-width="200" />
-        <el-table-column prop="gender" label="Giới tính" min-width="90" />
+        <el-table-column label="Giới tính" min-width="90">
+          <template #default="scope">
+            <div>
+              {{ gender[scope.row.gender] }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="Ngày sinh" min-width="110">
           <template #default="scope">
             <div>
@@ -247,13 +258,33 @@ watch(search, () => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="doctor" label="Bác sĩ khám" min-width="200" />
-        <el-table-column label="Kết quả khám" width="120">
-          <div class="patient-code information-color">Xem kết quả</div>
+        <el-table-column prop="type" label="Nhóm bệnh nhân" min-width="140">
+          <template #default="scope">
+            <div>
+              {{ patientType[scope.row.type] }}
+            </div>
+          </template>
         </el-table-column>
-        <el-table-column prop="type" label="Nhóm bệnh nhân" min-width="140" />
-        <el-table-column prop="state" label="Trạng thái" min-width="130" />
-        <el-table-column prop="expense" label="Chi phí" min-width="130" />
+        <el-table-column prop="state" label="Trạng thái" min-width="140">
+          <template #default="scope">
+            <div
+              :style="{
+                color: patientStateColor[scope.row.state],
+                fontWeight: 700
+              }"
+            >
+              {{ patientState[scope.row.state] }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="expense" label="Chi phí" min-width="130">
+          <template #default="scope">
+            <div>
+              {{ formatExpense(parseInt(scope.row.expense)) }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="doctor" label="Bác sĩ khám" min-width="200" />
         <el-table-column prop="room" label="Phòng khám" min-width="120" />
         <el-table-column fixed="right" width="100">
           <template #default="scope">
@@ -300,39 +331,46 @@ watch(search, () => {
       <div class="patient-drawer-title">Thông tin bệnh nhân</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="patientFromData" label-width="140px">
-        <el-form-item label="Mã bệnh nhân" prop="patientCode" class="patient-form-item">
-          <el-input v-model="patientFromData.patientCode"></el-input>
-        </el-form-item>
+      <el-form :model="patientFormData" label-width="140px">
         <el-form-item label="Tên bệnh nhân" prop="name" class="patient-form-item">
-          <el-input v-model="patientFromData.name"></el-input>
+          <el-input v-model="patientFormData.name"></el-input>
         </el-form-item>
-        <el-form-item label="Giới tính" prop="gender" class="patient-form-item">
-          <el-input v-model="patientFromData.gender"></el-input>
+        <el-form-item label="Giới tính" class="patient-form-item" width="100%">
+          <el-select v-model="patientFormData.gender" placeholder="Chọn giới tính">
+            <el-option label="Nam" :value="'0'" />
+            <el-option label="Nữ" :value="'1'" />
+            <el-option label="Khác" :value="'2'" />
+          </el-select>
         </el-form-item>
         <el-form-item label="Ngày sinh" prop="dob" class="patient-form-item">
-          <el-input v-model="patientFromData.dob"></el-input>
+          <el-input v-model="patientFormData.dob"></el-input>
         </el-form-item>
         <el-form-item label="Số điện thoại" prop="phone" class="patient-form-item">
-          <el-input v-model="patientFromData.phone"></el-input>
+          <el-input v-model="patientFormData.phone"></el-input>
         </el-form-item>
         <el-form-item label="Ngày khám" prop="checkDate" class="patient-form-item">
-          <el-input v-model="patientFromData.checkDate"></el-input>
+          <el-input v-model="patientFormData.checkDate"></el-input>
         </el-form-item>
-        <el-form-item label="Nhóm bệnh nhân" prop="type" class="patient-form-item">
-          <el-input v-model="patientFromData.type"></el-input>
+        <el-form-item label="Nhóm bệnh nhân" class="patient-form-item">
+          <el-select v-model="patientFormData.type" placeholder="Chọn nhóm bệnh nhân">
+            <el-option label="Bệnh nhân mới" :value="'0'" />
+            <el-option label="Tái khám" :value="'1'" />
+          </el-select>
         </el-form-item>
         <el-form-item label="Bác sĩ khám" prop="doctor" class="patient-form-item">
-          <el-input v-model="patientFromData.doctor"></el-input>
+          <el-input v-model="patientFormData.doctor"></el-input>
         </el-form-item>
-        <el-form-item label="Trạng thái" prop="state" class="patient-form-item">
-          <el-input v-model="patientFromData.state"></el-input>
+        <el-form-item label="Trạng thái" class="patient-form-item">
+          <el-select v-model="patientFormData.state" placeholder="Chọn trạng thái">
+            <el-option label="Chưa thanh toán" :value="'0'" />
+            <el-option label="Đã thanh toán" :value="'1'" />
+          </el-select>
         </el-form-item>
         <el-form-item label="Chi phí" prop="expense" class="patient-form-item">
-          <el-input v-model="patientFromData.expense"></el-input>
+          <el-input v-model="patientFormData.expense"></el-input>
         </el-form-item>
         <el-form-item label="Phòng khám" prop="room" class="patient-form-item">
-          <el-input v-model="patientFromData.room"></el-input>
+          <el-input v-model="patientFormData.room"></el-input>
         </el-form-item>
       </el-form>
       <div class="patient-drawer-button">
@@ -356,7 +394,7 @@ h1 {
   // position: absolute;
   // right: 100px;
 }
-.patient-code {
+.patient-name {
   cursor: pointer;
   font-weight: 700;
 }

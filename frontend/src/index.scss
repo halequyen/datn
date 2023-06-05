@@ -23,11 +23,15 @@
 }
 
 .primary-color {
+  color: #5284d9;
+}
+
+.red-color {
   color: red;
 }
 
 .information-color {
-  color: #ffe066;
+  color: #f4d454;
 }
 
 .no-active-style {
@@ -63,4 +67,8 @@
   .title-add {
     padding: 5px;
   }
+}
+
+.el-select {
+  width: 100%;
 }
