@@ -8,7 +8,8 @@ import {
   patientStateColor,
   patientState,
   gender,
-  formatExpense
+  formatExpense,
+  formatTotalPrices
 } from '../../format'
 
 interface Patient {
@@ -25,6 +26,15 @@ interface Patient {
   room: String
 }
 
+interface PatientBill {
+  _id: String
+  name: String
+  quantity: String
+  price: String
+  patientId: String
+  date: String
+}
+
 const patients = ref<Patient[]>([])
 const search = ref('')
 const showPatientForm = ref(false)
@@ -32,7 +42,12 @@ const loading = ref(false)
 const pageSize = ref(10)
 const currentPage = ref(1)
 const pagingData = ref<Patient[]>([])
+const assignPatientData = ref<Patient[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
+const dialogTableVisible = ref(false)
+const patientBills = ref<PatientBill[]>([])
+const patientBillData = ref<PatientBill[]>([])
+const showPatientBillForm = ref(false)
 
 let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -48,6 +63,167 @@ const patientFormData = ref<Patient>({
   state: '',
   expense: '',
   room: ''
+})
+
+const patientBillFormData = ref<PatientBill>({
+  _id: '',
+  name: '',
+  quantity: '',
+  price: '',
+  patientId: '',
+  date: ''
+})
+
+const fetchPatientBills = async () => {
+  try {
+    const response = await axios.get('http://127.0.0.1:3333/patient_bill')
+    patientBills.value = response.data
+    console.log(response)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const openPatientBill = (patient: Patient) => {
+  dialogTableVisible.value = true;
+  assignPatientData.value = pagingData.value.filter((item: Patient) => item._id === patient._id)
+  patientBillData.value = patientBills.value.filter(
+    (bill: PatientBill) => bill.patientId === patient._id
+  );
+};
+
+const openPatientBillForm = (patientBill: PatientBill) => {
+  showPatientBillForm.value = true
+  patientBillFormData.value = { ...patientBill }
+}
+
+const resetBillForm = (item: Patient) => {
+  patientBillFormData.value = {
+    _id: '',
+    name: '',
+    quantity: '0',
+    price: '',
+    patientId: item._id,
+    date: ''
+  }
+}
+
+const onClickBill = (item: any) => {
+  const newPatientBill = { ...patientBillFormData.value }
+  console.log(newPatientBill)
+  newPatientBill.date = formatDate(new Date().toDateString())
+  if (newPatientBill._id) {
+    axios
+      .put(`http://127.0.0.1:3333/patient_bill/${newPatientBill._id}`, newPatientBill)
+      .then((response) => {
+        console.log(response.data)
+        resetBillForm(item)
+        fetchPatientBills()
+        showPatientBillForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  } else {
+    newPatientBill.patientId = item._id
+    axios
+      .post('http://127.0.0.1:3333/patient_bill', newPatientBill)
+      .then((response) => {
+        console.log(response.data)
+        resetBillForm(item)
+        fetchPatientBills()
+        showPatientBillForm.value = false
+        loading.value = false
+        ElNotification({
+          title: 'Thành công',
+          type: 'success'
+        })
+      })
+      .catch((error) => {
+        console.log(error)
+        ElNotification({
+          title: 'Thất bại',
+          type: 'error'
+        })
+      })
+  }
+}
+
+const handleOnClickBill = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
+    })
+    loading.value = true
+    await onClickBill(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
+}
+
+const handleCloseBill = () => {
+  ruleFormRef.value!.close()
+}
+
+const deletePatientBill = (patient: Patient) => {
+  ElMessageBox.confirm('Bạn chắc chắn muốn xóa mục này?', 'Xác nhận', {
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+    type: 'warning'
+  })
+    .then(() => {
+      axios
+        .delete(`http://127.0.0.1:3333/patient_bill/${patient._id}`)
+        .then((response) => {
+          console.log(response.data)
+          fetchPatientBills()
+          ElNotification({
+            title: 'Thành công',
+            type: 'success'
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+          ElNotification({
+            title: 'Thất bại',
+            type: 'error'
+          })
+        })
+    })
+    .catch(() => {
+      console.log('Hủy bỏ xóa bệnh nhân')
+    })
+}
+
+const cancelBillForm = () => {
+  loading.value = false
+  showPatientBillForm.value = false
+  clearTimeout(timer)
+}
+
+const totalPrice = computed<any>(() => {
+  let total = 0
+  const priceArr = patientBillData.value.map((item: any) => item.price)
+  const quantityArr = patientBillData.value.map((item: any) => item.quantity)
+  if (priceArr.length > 0) {
+    for (let i = 0; i < priceArr.length; i++) {
+      total += priceArr[i] * quantityArr[i]
+    }
+    return total
+  } else {
+    return '0'
+  }
 })
 
 const fetchPatients = async () => {
@@ -202,6 +378,7 @@ const cancelForm = () => {
 
 onMounted(() => {
   fetchPatients()
+  fetchPatientBills()
   // pagingData.value = filterTableData.value.slice(0, pageSize.value)
   // ruleFormRef.value = ref<InstanceType<typeof ElDrawer>>()
 })
@@ -282,6 +459,11 @@ watch(search, () => {
             <div>
               {{ formatExpense(parseInt(scope.row.expense)) }}
             </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="Hóa đơn" min-width="110">
+          <template #default="scope">
+            <div class="patient-bill" @click="openPatientBill(scope.row)">Xem chi tiết</div>
           </template>
         </el-table-column>
         <el-table-column prop="doctor" label="Bác sĩ khám" min-width="200" />
@@ -381,6 +563,85 @@ watch(search, () => {
       </div>
     </div>
   </el-drawer>
+
+  <el-dialog v-model="dialogTableVisible">
+    <template #header>
+      <div class="patient-drawer-title-bill">Hóa đơn</div>
+    </template>
+    <div class="d-flex add-icon-bill">
+      <font-awesome-icon
+        class="icon-add-bill"
+        icon="fa-solid fa-plus"
+        @click="openPatientBillForm"
+      />
+      <div class="title-add-bill">Thêm</div>
+    </div>
+    <el-table border :data="patientBillData">
+      <el-table-column property="name" label="Tên dịch vụ/ thuốc" min-width="250" />
+      <el-table-column property="price" label="Đơn giá" min-width="100">
+        <template #default="scope">
+          <div>
+            {{ formatExpense(parseInt(scope.row.price)) }}
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column property="quantity" label="Số lượng" min-width="100" />
+      <el-table-column property="total" label="Thành tiền" min-width="100">
+        <template #default="scope">
+          <div>
+            {{ formatTotalPrices(scope.row) }}
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column fixed="right" width="100">
+          <template #default="scope">
+            <font-awesome-icon
+              class="font-awesome-icon"
+              icon="fa-solid fa-pencil"
+              @click="openPatientBillForm(scope.row)"
+            />
+            <font-awesome-icon
+              @click="deletePatientBill(scope.row)"
+              class="font-awesome-icon"
+              icon="fa-regular fa-trash-can"
+            />
+          </template>
+        </el-table-column>
+    </el-table>
+    <div class="total-bill">Tổng thanh toán: {{ formatExpense(totalPrice) }}</div>
+  </el-dialog>
+
+  <el-drawer
+    ref="ruleFormRef"
+    v-model="showPatientBillForm"
+    :before-close="handleCloseBill"
+    direction="rtl"
+    class="patient-drawer"
+    size="40%"
+  >
+    <template #header>
+      <div class="patient-drawer-title">Thêm danh mục</div>
+    </template>
+    <div class="demo-drawer__content">
+      <el-form :model="patientBillFormData" label-width="140px">
+        <el-form-item label="Tên thuốc, dịch vụ" prop="name" class="patient-form-item">
+          <el-input v-model="patientBillFormData.name"></el-input>
+        </el-form-item>
+        <el-form-item label="Đơn giá" prop="price" class="patient-form-item">
+          <el-input v-model="patientBillFormData.price"></el-input>
+        </el-form-item>
+        <el-form-item label="Số Lượng" prop="quantity" class="patient-form-item">
+          <el-input v-model="patientBillFormData.quantity"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="patient-drawer-button">
+        <el-button @click="cancelBillForm">Hủy bỏ</el-button>
+        <el-button type="primary" :loading="loading" @click="handleOnClickBill(assignPatientData)">{{
+          loading ? '' : 'Lưu'
+        }}</el-button>
+      </div>
+    </div>
+  </el-drawer>
 </template>
 
 <style lang="scss" scoped>
@@ -418,5 +679,39 @@ h1 {
     position: absolute;
     right: 20px;
   }
+}
+
+.patient-bill {
+  cursor: pointer;
+}
+.patient-bill:hover {
+  color: #000;
+}
+
+.patient-drawer-title-bill {
+  text-align: center;
+  font-size: 180%;
+  font-weight: bold;
+  color: #000;
+}
+
+.add-icon-bill {
+  position: absolute;
+  top: 50px;
+  right: 60px;
+  color: red;
+
+  .icon-add-bill {
+    font-size: 120%;
+  }
+
+  .title-add-bill {
+    margin: 0 0 15px 10px;
+  }
+}
+
+.total-bill {
+  margin-top: 15px;
+  font-weight: 700;
 }
 </style>

@@ -1,3 +1,4 @@
+const patientBillRouter = require('./patientBill')
 const scheduleRouter = require('./schedule')
 const informationRouter = require('./information')
 const userRouter = require('./user')
@@ -8,6 +9,7 @@ const servicePriceRouter = require('./servicePrice')
 const medicinePriceRouter = require('./medicinePrice')
 const siteRouter = require('./site')
 function route(app) {
+    app.use('/patient_bill', patientBillRouter)
     app.use('/schedule', scheduleRouter)
     app.use('/information', informationRouter)
     app.use('/user', userRouter)

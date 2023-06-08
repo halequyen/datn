@@ -1,3 +1,13 @@
+export interface Bills {
+  _id: string;
+  name: string;
+  quantity: string;
+  price: string;
+  patientId: string;
+  date: string;
+}
+
+
 export function formatDate(dob: string | Date): string {
   if (!dob) {
     return ''

@@ -95,7 +95,7 @@ const onChangeOwner = () => {
 const openUserForm = (user: User) => {
   showUserForm.value = true
   userFromData.value = { ...user }
-  selectedStaffId.value = user.ownerId.split(', ')
+  selectedStaffId.value = user.ownerId
   selectedStaff.value = staffs.value.filter((staff) =>
     selectedStaffId.value.includes(staff._id.toString())
   )
@@ -104,7 +104,7 @@ const openUserForm = (user: User) => {
 const onClick = (item: any) => {
   const newUser = { ...userFromData.value }
   console.log(newUser)
-  newUser.ownerId = selectedStaffId.value.join(', ')
+  newUser.ownerId = selectedStaffId.value
   newUser.owner = staffs.value
     .filter((staff) => selectedStaffId.value.includes(staff._id.toString()))
     .map((staff) => staff.name)
@@ -165,7 +165,7 @@ const handleOnClick = async (item: any) => {
     await onClick(item)
     loading.value = false
   } catch (error) {
-    console.log('error')
+    console.log(error)
   }
 }
 
@@ -292,6 +292,7 @@ watch(staffs, () => {
     ref="ruleFormRef"
     v-model="showUserForm"
     :before-close="handleClose"
+    destroy-on-close
     direction="rtl"
     class="user-drawer"
     size="50%"
@@ -310,12 +311,12 @@ watch(staffs, () => {
         <el-form-item label="Chủ sở hữu" class="user-form-item">
           <el-select
             v-model="selectedStaffId"
-            multiple
             filterable
             allow-create
             default-first-option
             :reserve-keyword="false"
             placeholder="Chọn nhân viên"
+            @change="() => {console.log(selectedStaffId)}"
           >
             <el-option
               v-for="item in staffs"
