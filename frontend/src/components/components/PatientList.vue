@@ -47,6 +47,7 @@ const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 const ruleBillFormRef = ref<InstanceType<typeof ElDrawer>>()
 const dialogTableVisible = ref(false)
 const patientBills = ref<PatientBill[]>([])
+const patientBillDataFormat = ref<PatientBill[]>([])
 const patientBillData = ref<PatientBill[]>([])
 const showPatientBillForm = ref(false)
 
@@ -238,6 +239,40 @@ const totalPrice = computed<any>(() => {
     return '0'
   }
 })
+
+const formatTotalPriceData = (patient: Patient) => {
+  if(patient._id) {
+    patientBillDataFormat.value = patientBills.value.filter(
+    (bill: PatientBill) => bill.patientId === patient._id
+  );
+  let total = 0
+  const priceArr = patientBillDataFormat.value.map((item: any) => item.price)
+  const quantityArr = patientBillDataFormat.value.map((item: any) => item.quantity)
+  if (priceArr.length > 0) {
+    for (let i = 0; i < priceArr.length; i++) {
+      total += priceArr[i] * quantityArr[i]
+    }
+    const strAmount = total.toString()
+    let formattedAmount = ''
+    let counter = 0
+
+    for (let i = strAmount.length - 1; i >= 0; i--) {
+      formattedAmount = strAmount[i] + formattedAmount
+      counter++
+
+      if (counter === 3 && i > 0) {
+        formattedAmount = '.' + formattedAmount
+        counter = 0
+      }
+    }
+    return formattedAmount
+  } else {
+    return '0'
+  }
+  } else {
+    return '0'
+  }
+}
 
 const fetchPatients = async () => {
   try {
@@ -471,7 +506,7 @@ watch(search, () => {
         <el-table-column prop="expense" label="Chi phí" min-width="130">
           <template #default="scope">
             <div>
-              {{ formatExpense(parseInt(scope.row.expense)) }}
+              {{ formatTotalPriceData(scope.row) }}
             </div>
           </template>
         </el-table-column>
