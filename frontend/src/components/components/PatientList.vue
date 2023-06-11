@@ -44,6 +44,7 @@ const currentPage = ref(1)
 const pagingData = ref<Patient[]>([])
 const assignPatientData = ref<Patient[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
+const ruleBillFormRef = ref<InstanceType<typeof ElDrawer>>()
 const dialogTableVisible = ref(false)
 const patientBills = ref<PatientBill[]>([])
 const patientBillData = ref<PatientBill[]>([])
@@ -97,13 +98,13 @@ const openPatientBillForm = (patientBill: PatientBill) => {
   patientBillFormData.value = { ...patientBill }
 }
 
-const resetBillForm = (item: Patient) => {
+const resetBillForm = () => {
   patientBillFormData.value = {
     _id: '',
     name: '',
     quantity: '0',
     price: '',
-    patientId: item._id,
+    patientId: '',
     date: ''
   }
 }
@@ -117,8 +118,12 @@ const onClickBill = (item: any) => {
       .put(`http://127.0.0.1:3333/patient_bill/${newPatientBill._id}`, newPatientBill)
       .then((response) => {
         console.log(response.data)
-        resetBillForm(item)
-        fetchPatientBills()
+        resetBillForm()
+        fetchPatientBills().then(() => {
+          patientBillData.value = patientBills.value.filter(
+            (bill: PatientBill) => bill.patientId === item[0]._id
+          )
+        })
         showPatientBillForm.value = false
         loading.value = false
         ElNotification({
@@ -134,13 +139,17 @@ const onClickBill = (item: any) => {
         })
       })
   } else {
-    newPatientBill.patientId = item._id
+    newPatientBill.patientId = item[0]._id
     axios
       .post('http://127.0.0.1:3333/patient_bill', newPatientBill)
       .then((response) => {
         console.log(response.data)
-        resetBillForm(item)
-        fetchPatientBills()
+        resetBillForm()
+        fetchPatientBills().then(() => {
+          patientBillData.value = patientBills.value.filter(
+            (bill: PatientBill) => bill.patientId === item[0]._id
+          )
+        })
         showPatientBillForm.value = false
         loading.value = false
         ElNotification({
@@ -173,7 +182,7 @@ const handleOnClickBill = async (item: any) => {
 }
 
 const handleCloseBill = () => {
-  ruleFormRef.value!.close()
+  ruleBillFormRef.value!.close()
 }
 
 const deletePatientBill = (patient: Patient) => {
@@ -187,7 +196,11 @@ const deletePatientBill = (patient: Patient) => {
         .delete(`http://127.0.0.1:3333/patient_bill/${patient._id}`)
         .then((response) => {
           console.log(response.data)
-          fetchPatientBills()
+          fetchPatientBills().then(() => {
+          patientBillData.value = patientBills.value.filter(
+            (bill: PatientBill) => bill.patientId === assignPatientData.value[0]._id
+          )
+        })
           ElNotification({
             title: 'Thành công',
             type: 'success'
@@ -387,6 +400,7 @@ watch(search, () => {
   currentPage.value = 1
   pagingData.value = filterTableData.value.slice(0, pageSize.value)
 })
+
 </script>
 
 <template>
@@ -612,7 +626,7 @@ watch(search, () => {
   </el-dialog>
 
   <el-drawer
-    ref="ruleFormRef"
+    ref="ruleBillFormRef"
     v-model="showPatientBillForm"
     :before-close="handleCloseBill"
     direction="rtl"
