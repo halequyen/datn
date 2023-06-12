@@ -178,6 +178,14 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  unit: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  price: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  quantity: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  type: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
   fetchMaterials()
 })
@@ -266,6 +274,7 @@ watch(search, () => {
     v-model="showMaterialForm"
     :before-close="handleClose"
     direction="rtl"
+    destroy-on-close
     class="material-drawer"
     size="50%"
   >
@@ -273,7 +282,7 @@ watch(search, () => {
       <div class="material-drawer-title">Thông tin vật tư</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="materialFromData" label-width="140px">
+      <el-form :model="materialFromData" :rules="rules" label-width="140px">
         <el-form-item label="Tên vật tư" prop="name" class="material-form-item">
           <el-input v-model="materialFromData.name"></el-input>
         </el-form-item>
@@ -285,9 +294,6 @@ watch(search, () => {
         </el-form-item>
         <el-form-item label="Số lượng" prop="quantity" class="material-form-item">
           <el-input v-model="materialFromData.quantity"></el-input>
-        </el-form-item>
-        <el-form-item label="Tổng giá trị" prop="price" class="material-form-item">
-          <el-input v-model="materialFromData.price"></el-input>
         </el-form-item>
         <el-form-item label="Phân loại" prop="type" class="material-form-item">
           <el-input v-model="materialFromData.type"></el-input>

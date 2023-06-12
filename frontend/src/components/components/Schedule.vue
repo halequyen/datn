@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
+import { formatDate } from '../../format'
 
 interface Patient {
   _id: String
@@ -12,6 +13,7 @@ interface Patient {
   timeSlot: String
 }
 
+const selectedDate = ref<any>(new Date().toISOString().split('T')[0])
 const patients = ref<Patient[]>([])
 const search = ref('')
 const showPatientForm = ref(false)
@@ -38,7 +40,8 @@ const fetchPatients = async () => {
   try {
     const response = await axios.get('http://127.0.0.1:3333/schedule')
     patients.value = response.data
-    pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    selectedDate.value = selectedDate.value || formatDate(new Date().toDateString())
+    pagingData.value = filteredData.value.slice(0, pageSize.value)
     onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
@@ -52,12 +55,23 @@ const filterTableData = computed(() =>
   )
 )
 
+const handleDateSelect = (date: any) => {
+  selectedDate.value = formatDate(date.day)
+}
+
+const filteredData = computed(() => {
+  const data = filterTableData.value.filter(
+    (item: any) => formatDate(item.date) === formatDate(selectedDate.value)
+  )
+  return data
+})
+
 const onPageChange = async (pageNumber: number): Promise<void> => {
   currentPage.value = pageNumber
   const rowsNumber = pageSize.value
   const startIndex = (pageNumber - 1) * rowsNumber
   const endIndex = pageNumber * rowsNumber
-  pagingData.value = filterTableData.value.slice(startIndex, endIndex)
+  pagingData.value = filteredData.value.slice(startIndex, endIndex)
 }
 
 const openPatientForm = () => {
@@ -91,7 +105,7 @@ const resetForm = () => {
 const onClick = (item: any) => {
   const newSchedule = { ...scheduleFormData.value }
   console.log(newSchedule)
-
+  newSchedule.date = formatDate(new Date().toDateString())
   if (newSchedule._id) {
     axios
       .put(`http://127.0.0.1:3333/schedule/${newSchedule._id}`, newSchedule)
@@ -188,20 +202,26 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  phone: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
+  selectedDate.value = selectedDate.value || formatDate(new Date().toDateString())
   fetchPatients()
 })
 
-watch(search, () => {
+watch([search, selectedDate], () => {
   currentPage.value = 1
-  pagingData.value = filterTableData.value.slice(0, pageSize.value)
+  pagingData.value = filteredData.value.slice(0, pageSize.value)
 })
 </script>
 
 <template>
   <el-calendar>
     <template #date-cell="{ data }">
-      <p :class="data.isSelected ? 'is-selected' : ''">
+      <p @click="handleDateSelect(data)" :class="data.isSelected ? 'is-selected' : ''">
         {{ data.day.split('-')[2] }}
         {{ data.isSelected ? '✔️' : '' }}
       </p>
@@ -213,7 +233,7 @@ watch(search, () => {
     <div class="schedule-pick">
       <div class="schedule-pick-morning d-flex">
         <div class="morning">Sáng:</div>
-        <el-badge :value="patients.length" :max="10" class="item">
+        <el-badge :value="filteredData.length" :max="10" class="item">
           <el-button @click="openPatientForm" size="large" type="primary">08:00 - 09:00</el-button>
         </el-badge>
         <el-badge :value="4" :max="10" class="item">
@@ -252,6 +272,7 @@ watch(search, () => {
     v-model="showPatientForm"
     :before-close="handleClose"
     direction="rtl"
+    destroy-on-close
     class="patient-drawer"
     size="50%"
   >
@@ -298,13 +319,13 @@ watch(search, () => {
       </el-table>
       <div class="d-flex">
         <div class="pagination-total">
-          <span>Số lượng: {{ filterTableData.length }}</span>
+          <span>Số lượng: {{ filteredData.length }}</span>
         </div>
         <div class="pagination-button">
           <el-pagination
             v-model:page-size="pageSize"
             v-model:current-page="currentPage"
-            :total="filterTableData.length"
+            :total="filteredData.length"
             background
             layout="prev, pager, next"
             @current-change="onPageChange"
@@ -319,6 +340,7 @@ watch(search, () => {
     v-model="showScheduleForm"
     :before-close="handleScheduleClose"
     direction="rtl"
+    destroy-on-close
     class="patient-drawer"
     size="35%"
   >
@@ -326,7 +348,7 @@ watch(search, () => {
       <div class="patient-drawer-title">Thông tin đặt lịch</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="scheduleFormData" label-width="140px">
+      <el-form :model="scheduleFormData" :rules="rules" label-width="140px">
         <el-form-item label="Tên bệnh nhân" prop="name" class="patient-form-item">
           <el-input v-model="scheduleFormData.name"></el-input>
         </el-form-item>

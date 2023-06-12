@@ -209,6 +209,11 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  userName: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  password: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
   fetchUsers()
   fetchStaffs()
@@ -301,7 +306,7 @@ watch(staffs, () => {
       <div class="user-drawer-title">Thông tin tài khoản</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="userFromData" label-width="140px">
+      <el-form :model="userFromData" :rules="rules" label-width="140px">
         <el-form-item label="Tên đăng nhập" prop="userName" class="user-form-item">
           <el-input v-model="userFromData.userName"></el-input>
         </el-form-item>

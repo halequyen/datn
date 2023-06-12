@@ -87,12 +87,12 @@ const fetchPatientBills = async () => {
 }
 
 const openPatientBill = (patient: Patient) => {
-  dialogTableVisible.value = true;
+  dialogTableVisible.value = true
   assignPatientData.value = pagingData.value.filter((item: Patient) => item._id === patient._id)
   patientBillData.value = patientBills.value.filter(
     (bill: PatientBill) => bill.patientId === patient._id
-  );
-};
+  )
+}
 
 const openPatientBillForm = (patientBill: PatientBill) => {
   showPatientBillForm.value = true
@@ -198,10 +198,10 @@ const deletePatientBill = (patient: Patient) => {
         .then((response) => {
           console.log(response.data)
           fetchPatientBills().then(() => {
-          patientBillData.value = patientBills.value.filter(
-            (bill: PatientBill) => bill.patientId === assignPatientData.value[0]._id
-          )
-        })
+            patientBillData.value = patientBills.value.filter(
+              (bill: PatientBill) => bill.patientId === assignPatientData.value[0]._id
+            )
+          })
           ElNotification({
             title: 'Thành công',
             type: 'success'
@@ -241,34 +241,34 @@ const totalPrice = computed<any>(() => {
 })
 
 const formatTotalPriceData = (patient: Patient) => {
-  if(patient._id) {
+  if (patient._id) {
     patientBillDataFormat.value = patientBills.value.filter(
-    (bill: PatientBill) => bill.patientId === patient._id
-  );
-  let total = 0
-  const priceArr = patientBillDataFormat.value.map((item: any) => item.price)
-  const quantityArr = patientBillDataFormat.value.map((item: any) => item.quantity)
-  if (priceArr.length > 0) {
-    for (let i = 0; i < priceArr.length; i++) {
-      total += priceArr[i] * quantityArr[i]
-    }
-    const strAmount = total.toString()
-    let formattedAmount = ''
-    let counter = 0
-
-    for (let i = strAmount.length - 1; i >= 0; i--) {
-      formattedAmount = strAmount[i] + formattedAmount
-      counter++
-
-      if (counter === 3 && i > 0) {
-        formattedAmount = '.' + formattedAmount
-        counter = 0
+      (bill: PatientBill) => bill.patientId === patient._id
+    )
+    let total = 0
+    const priceArr = patientBillDataFormat.value.map((item: any) => item.price)
+    const quantityArr = patientBillDataFormat.value.map((item: any) => item.quantity)
+    if (priceArr.length > 0) {
+      for (let i = 0; i < priceArr.length; i++) {
+        total += priceArr[i] * quantityArr[i]
       }
+      const strAmount = total.toString()
+      let formattedAmount = ''
+      let counter = 0
+
+      for (let i = strAmount.length - 1; i >= 0; i--) {
+        formattedAmount = strAmount[i] + formattedAmount
+        counter++
+
+        if (counter === 3 && i > 0) {
+          formattedAmount = '.' + formattedAmount
+          counter = 0
+        }
+      }
+      return formattedAmount
+    } else {
+      return '0'
     }
-    return formattedAmount
-  } else {
-    return '0'
-  }
   } else {
     return '0'
   }
@@ -424,6 +424,18 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  phone: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  checkDate: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
+const rulesBill = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  price: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  quantity: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
   fetchPatients()
   fetchPatientBills()
@@ -435,7 +447,6 @@ watch(search, () => {
   currentPage.value = 1
   pagingData.value = filterTableData.value.slice(0, pageSize.value)
 })
-
 </script>
 
 <template>
@@ -555,6 +566,7 @@ watch(search, () => {
     v-model="showPatientForm"
     :before-close="handleClose"
     direction="rtl"
+    destroy-on-close
     class="patient-drawer"
     size="50%"
   >
@@ -562,7 +574,7 @@ watch(search, () => {
       <div class="patient-drawer-title">Thông tin bệnh nhân</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="patientFormData" label-width="140px">
+      <el-form :model="patientFormData" :rules="rules" label-width="140px">
         <el-form-item label="Tên bệnh nhân" prop="name" class="patient-form-item">
           <el-input v-model="patientFormData.name"></el-input>
         </el-form-item>
@@ -643,19 +655,19 @@ watch(search, () => {
         </template>
       </el-table-column>
       <el-table-column fixed="right" width="100">
-          <template #default="scope">
-            <font-awesome-icon
-              class="font-awesome-icon"
-              icon="fa-solid fa-pencil"
-              @click="openPatientBillForm(scope.row)"
-            />
-            <font-awesome-icon
-              @click="deletePatientBill(scope.row)"
-              class="font-awesome-icon"
-              icon="fa-regular fa-trash-can"
-            />
-          </template>
-        </el-table-column>
+        <template #default="scope">
+          <font-awesome-icon
+            class="font-awesome-icon"
+            icon="fa-solid fa-pencil"
+            @click="openPatientBillForm(scope.row)"
+          />
+          <font-awesome-icon
+            @click="deletePatientBill(scope.row)"
+            class="font-awesome-icon"
+            icon="fa-regular fa-trash-can"
+          />
+        </template>
+      </el-table-column>
     </el-table>
     <div class="total-bill">Tổng thanh toán: {{ formatExpense(totalPrice) }}</div>
   </el-dialog>
@@ -665,6 +677,7 @@ watch(search, () => {
     v-model="showPatientBillForm"
     :before-close="handleCloseBill"
     direction="rtl"
+    destroy-on-close
     class="patient-drawer"
     size="40%"
   >
@@ -672,7 +685,7 @@ watch(search, () => {
       <div class="patient-drawer-title">Thêm danh mục</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="patientBillFormData" label-width="140px">
+      <el-form :model="patientBillFormData" :rules="rulesBill" label-width="140px">
         <el-form-item label="Tên thuốc, dịch vụ" prop="name" class="patient-form-item">
           <el-input v-model="patientBillFormData.name"></el-input>
         </el-form-item>
@@ -685,9 +698,12 @@ watch(search, () => {
       </el-form>
       <div class="patient-drawer-button">
         <el-button @click="cancelBillForm">Hủy bỏ</el-button>
-        <el-button type="primary" :loading="loading" @click="handleOnClickBill(assignPatientData)">{{
-          loading ? '' : 'Lưu'
-        }}</el-button>
+        <el-button
+          type="primary"
+          :loading="loading"
+          @click="handleOnClickBill(assignPatientData)"
+          >{{ loading ? '' : 'Lưu' }}</el-button
+        >
       </div>
     </div>
   </el-drawer>

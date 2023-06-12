@@ -185,6 +185,14 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  unit: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  price: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  quantity: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  type: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
   fetchMedicinePrices()
 })
@@ -275,6 +283,7 @@ watch(search, () => {
     v-model="showMedicineForm"
     :before-close="handleClose"
     direction="rtl"
+    destroy-on-close
     class="medicine-drawer"
     size="50%"
   >
@@ -282,7 +291,7 @@ watch(search, () => {
       <div class="medicine-drawer-title">Thông tin thuốc</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="medicineFromData" label-width="140px">
+      <el-form :model="medicineFromData" :rules="rules" label-width="140px">
         <el-form-item label="Tên thuốc" prop="name" class="medicine-form-item">
           <el-input v-model="medicineFromData.name"></el-input>
         </el-form-item>
@@ -300,9 +309,6 @@ watch(search, () => {
         </el-form-item>
         <el-form-item label="Số lượng" prop="quantity" class="medicine-form-item">
           <el-input v-model="medicineFromData.quantity"></el-input>
-        </el-form-item>
-        <el-form-item label="Tổng giá trị" prop="price" class="medicine-form-item">
-          <el-input v-model="medicineFromData.price"></el-input>
         </el-form-item>
         <el-form-item label="Phân loại" prop="type" class="medicine-form-item">
           <el-input v-model="medicineFromData.type"></el-input>

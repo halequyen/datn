@@ -175,6 +175,12 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  price: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  type: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
   fetchServicePrices()
 })
@@ -255,6 +261,7 @@ watch(search, () => {
     v-model="showServiceForm"
     :before-close="handleClose"
     direction="rtl"
+    destroy-on-close
     class="service-drawer"
     size="50%"
   >
@@ -262,7 +269,7 @@ watch(search, () => {
       <div class="service-drawer-title">Thông tin dịch vụ</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="serviceFromData" label-width="140px">
+      <el-form :model="serviceFromData" :rules="rules" label-width="140px">
         <el-form-item label="Tên dịch vụ" prop="name" class="service-form-item">
           <el-input v-model="serviceFromData.name"></el-input>
         </el-form-item>

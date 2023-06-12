@@ -178,6 +178,14 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  unit: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  price: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  quantity: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  type: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
   fetchEquipments()
 })
@@ -266,6 +274,7 @@ watch(search, () => {
     v-model="showEquipmentForm"
     :before-close="handleClose"
     direction="rtl"
+    destroy-on-close
     class="equipment-drawer"
     size="50%"
   >
@@ -273,7 +282,7 @@ watch(search, () => {
       <div class="equipment-drawer-title">Thông tin thiết bị</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="equipmentFromData" label-width="140px">
+      <el-form :model="equipmentFromData" :rules="rules" label-width="140px">
         <el-form-item label="Tên thiết bị" prop="name" class="equipment-form-item">
           <el-input v-model="equipmentFromData.name"></el-input>
         </el-form-item>
@@ -285,9 +294,6 @@ watch(search, () => {
         </el-form-item>
         <el-form-item label="Số lượng" prop="quantity" class="equipment-form-item">
           <el-input v-model="equipmentFromData.quantity"></el-input>
-        </el-form-item>
-        <el-form-item label="Tổng giá trị" prop="price" class="equipment-form-item">
-          <el-input v-model="equipmentFromData.price"></el-input>
         </el-form-item>
         <el-form-item label="Phân loại" prop="type" class="equipment-form-item">
           <el-input v-model="equipmentFromData.type"></el-input>

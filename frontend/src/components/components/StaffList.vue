@@ -189,6 +189,14 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const rules = ref({
+  name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  dob: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  phone: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  jobTitle: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  email: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
+
 onMounted(() => {
   fetchStaffs()
 })
@@ -289,6 +297,7 @@ watch(search, () => {
     v-model="showStaffForm"
     :before-close="handleClose"
     direction="rtl"
+    destroy-on-close
     class="staff-drawer"
     size="50%"
   >
@@ -296,7 +305,7 @@ watch(search, () => {
       <div class="staff-drawer-title">Thông tin nhân viên</div>
     </template>
     <div class="demo-drawer__content">
-      <el-form :model="staffFromData" label-width="140px">
+      <el-form :model="staffFromData" :rules="rules" label-width="140px">
         <el-form-item label="Tên nhân viên" prop="name" class="staff-form-item">
           <el-input v-model="staffFromData.name"></el-input>
         </el-form-item>
