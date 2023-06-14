@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import axios from 'axios'
-import type { FormInstance } from 'element-plus/lib/components/form/index.js'
+import type { FormInstance, FormRules } from 'element-plus/lib/components/form/index.js'
 import { ElMessageBox, ElNotification } from 'element-plus'
 
 interface Information {
@@ -54,7 +54,7 @@ const cancelForm = () => {
   fetchInformations()
 }
 
-const onClick = (item: any) => {
+const onClick = () => {
   const newInformation = { ...informations.value }
 
   if (newInformation._id) {
@@ -79,19 +79,38 @@ const onClick = (item: any) => {
   }
 }
 
-const handleOnClick = async (item: any) => {
-  try {
-    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
-      confirmButtonText: 'Lưu',
-      cancelButtonText: 'Hủy'
-    })
-    loading.value = true
-    await onClick(item)
-    loading.value = false
-  } catch (error) {
-    console.log('error')
+const handleOnClick = async (formEl: FormInstance | undefined): Promise<void> => {
+  if (!formEl) {
+    return
   }
+  await formEl.validate(async (valid, fields) => {
+    if (valid) {
+      try {
+        await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+          confirmButtonText: 'Lưu',
+          cancelButtonText: 'Hủy'
+        })
+        loading.value = true
+        await onClick()
+        loading.value = false
+      } catch (error) {
+        console.log('error')
+      }
+    } else {
+      console.log('error submit!', fields);
+    }
+  })
 }
+
+const rules = reactive<FormRules>({
+  agency: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  own: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  hotline: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  address: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  email: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  fanpage: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  website: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+})
 
 onMounted(() => {
   fetchInformations()
@@ -104,6 +123,7 @@ onMounted(() => {
     <el-form
       ref="ruleFormRef"
       :model="informations"
+      :rules="rules"
       label-width="120px"
       class="information-form"
       size="large"
@@ -111,28 +131,28 @@ onMounted(() => {
       <el-form-item label="Tên cơ sở" prop="agency" class="information-form-item">
         <el-input v-model="informations.agency" />
       </el-form-item>
-      <el-form-item label="Chủ cơ sở" prop="agency" class="information-form-item">
+      <el-form-item label="Chủ cơ sở" prop="own" class="information-form-item">
         <el-input v-model="informations.own" />
       </el-form-item>
-      <el-form-item label="Hotline" prop="agency" class="information-form-item">
+      <el-form-item label="Hotline" prop="hotline" class="information-form-item">
         <el-input v-model="informations.hotline" />
       </el-form-item>
-      <el-form-item label="Địa chỉ" prop="agency" class="information-form-item">
+      <el-form-item label="Địa chỉ" prop="address" class="information-form-item">
         <el-input v-model="informations.address" />
       </el-form-item>
-      <el-form-item label="Email" prop="agency" class="information-form-item">
+      <el-form-item label="Email" prop="email" class="information-form-item">
         <el-input v-model="informations.email" />
       </el-form-item>
-      <el-form-item label="Fanpage" prop="agency" class="information-form-item">
+      <el-form-item label="Fanpage" prop="fanpage" class="information-form-item">
         <el-input v-model="informations.fanpage" />
       </el-form-item>
-      <el-form-item label="Website" prop="agency" class="information-form-item">
+      <el-form-item label="Website" prop="website" class="information-form-item">
         <el-input v-model="informations.website" />
       </el-form-item>
     </el-form>
     <div class="information-drawer-button">
       <el-button @click="cancelForm">Hủy bỏ</el-button>
-      <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+      <el-button type="primary" :loading="loading" @click="handleOnClick(ruleFormRef)">{{
         loading ? '' : 'Lưu'
       }}</el-button>
     </div>
