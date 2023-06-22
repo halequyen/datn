@@ -2,11 +2,13 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
+import { userType } from '../../format'
 
 interface User {
   _id: String
   userName: String
   password: String
+  type: String
   ownerId: String
   owner: String
 }
@@ -27,7 +29,6 @@ const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 const staffs = ref<Staff[]>([])
 const selectedStaff = ref<Staff[]>([])
 const selectedStaffId = ref<string[]>([])
-const showPassword = ref(false)
 
 let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -35,6 +36,7 @@ const userFromData = ref<User>({
   _id: '',
   userName: '',
   password: '',
+  type: '',
   ownerId: '',
   owner: ''
 })
@@ -80,16 +82,10 @@ const resetForm = () => {
     _id: '',
     userName: '',
     password: '',
+    type: '',
     ownerId: '',
     owner: ''
   }
-}
-
-const onChangeOwner = () => {
-  const selectedStaffNames = staffs.value
-    .filter((staff) => selectedStaffId.value.includes(staff._id.toString()))
-    .map((staff) => staff.name)
-  userFromData.value.owner = selectedStaffNames.join(', ')
 }
 
 const openUserForm = (user: User) => {
@@ -259,6 +255,13 @@ watch(staffs, () => {
           </template>
         </el-table-column>
         <el-table-column prop="password" label="Mật khẩu" min-width="200" />
+        <el-table-column label="Phân loại" min-width="200">
+          <template #default="scope">
+            <div>
+              {{ userType[scope.row.type] }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="owner" label="Chủ sở hữu" min-width="200" />
         <el-table-column fixed="right" width="100">
           <template #default="scope">
@@ -312,6 +315,15 @@ watch(staffs, () => {
         </el-form-item>
         <el-form-item label="Mật khẩu" class="user-form-item">
           <el-input type="password" show-password="showPassword" v-model="userFromData.password"></el-input>
+        </el-form-item>
+        <el-form-item label="Phân loại" class="user-form-item">
+          <el-select v-model="userFromData.type" placeholder="Chọn giới tính">
+            <el-option label="Quản trị viên" :value="'0'" />
+            <el-option label="Trợ lý" :value="'1'" />
+            <el-option label="Quản lý thiết bị" :value="'2'" />
+            <el-option label="Lễ tân" :value="'3'" />
+            <el-option label="Bác sĩ" :value="'4'" />
+          </el-select>
         </el-form-item>
         <el-form-item label="Chủ sở hữu" class="user-form-item">
           <el-select

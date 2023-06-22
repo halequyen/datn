@@ -3,7 +3,7 @@ import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import { formatDate } from '../../format'
-
+import { Edit } from '@element-plus/icons-vue'
 interface Patient {
   _id: String
   name: String
@@ -207,9 +207,9 @@ const rules = ref({
   phone: [{ required: true, message: 'Vui lòng không bỏ trống' }]
 })
 
-onMounted(() => {
+onMounted(async () => {
   selectedDate.value = selectedDate.value || formatDate(new Date().toDateString())
-  fetchPatients()
+  await fetchPatients()
 })
 
 watch([search, selectedDate], () => {

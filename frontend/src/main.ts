@@ -1,7 +1,7 @@
 import './index.scss'
 
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { store, key } from "./stores"
 
 import App from './App.vue'
 import router from './router'
@@ -29,5 +29,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 library.add(faHouseChimneyMedical, faImagePortrait, faFileInvoiceDollar, faScrewdriverWrench, faPencil, faTrashCan, faGear, faMagnifyingGlass, faPlus, faEye, faEyeSlash)
-
-createApp(App).use(ElementPlus).component('font-awesome-icon', FontAwesomeIcon).use(router).use(createPinia()).mount('#app')
+app.use(store, key)
+app.use(ElementPlus)
+app.component('font-awesome-icon', FontAwesomeIcon)
+app.use(router)
+app.mount('#app')

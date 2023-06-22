@@ -1,26 +1,36 @@
 <script setup>
 import { defineComponent, ref, reactive } from 'vue';
-// import { useStore } from 'vuex'
+import {store} from "@/stores"
 
-  const login_form = ref({})
-  const store = useStore()
+console.log(store.state)
 
-  const rules = ref({
-    user: [
-      { required: true, message: 'Vui lòng nhập tên đăng nhập', trigger: 'blur' },
-      { pattern: /^[a-zA-Z0-9]+([._]?[a-zA-Z0-9]+)*$/, message: 'Tên đăng nhập không hợp lệ', trigger: 'blur' }
-    ],
-    password: [
-      { required: true, message: 'Vui lòng nhập mật khẩu', trigger: 'blur' }
-    ],
-  });
+const login_form = reactive({
+  userName: '',
+  password: ''
+});
+// const store = useStore()
 
-  const login = () => {
-    store.dispatch('login', login_form.value)
-    .then(() => {
-      store.commit('setLoggedInUser', login_form.value.user)
-    })
+const rules = ref({
+  userName: [
+    { required: true, message: 'Vui lòng nhập tên đăng nhập' },
+    { pattern: /^[a-zA-Z0-9]+([._]?[a-zA-Z0-9]+)*$/, message: 'Tên đăng nhập không hợp lệ' }
+  ],
+  password: [
+    { required: true, message: 'Vui lòng nhập mật khẩu' }
+  ],
+});
+
+const login = async () => {
+  try {
+    await store.dispatch('login', login_form);
+    store.commit('SET_USER', login_form.userName);
+  } catch (error) {
+    console.error('Đăng nhập thất bại:', error.message);
   }
+};
+
+console.log(login_form);
+
 </script>
 
 <template>
@@ -30,15 +40,16 @@ import { defineComponent, ref, reactive } from 'vue';
       </div>
       <div class="login-right">
         <h1>SKIN SYNC</h1>
-        <h2></h2>
-        <el-form :model="login_form" :rules="rules" ref="ruleFormRef" label-width="200px">
-          <el-form-item label="Tên đăng nhập" class="login-form" prop="user">
-            <el-input v-model="login_form.user"></el-input>
+        <el-form class="login-right-form" :model="login_form" :rules="rules" ref="ruleFormRef">
+          <el-form-item size="large" class="login-form" prop="userName">
+            <label class="required">Tên đăng nhập</label>
+            <el-input v-model="login_form.userName"></el-input>
           </el-form-item>
-          <el-form-item label="Mật khẩu" prop="password">
+          <el-form-item size="large" class="login-form" prop="password">
+            <label class="required">Mật khẩu</label>
             <el-input v-model="login_form.password" type="password"></el-input>
           </el-form-item>
-          <el-form-item>
+          <el-form-item class="login-button" size="large">
             <el-button type="primary" @click="login">Đăng nhập</el-button>
           </el-form-item>
         </el-form>
@@ -46,32 +57,41 @@ import { defineComponent, ref, reactive } from 'vue';
     </div>
   </template>
 
-<style scoped>
-.login {
-  /* align-items: center; */
-}
-
+<style scoped lang="scss">
 .login-left {
   margin: 50px;
 }
 
 .login-left-logo {
   width: 400px;
-
 }
 
 .login-right {
   margin: 50px;
-}
 
-.login-right h1 {
-  margin-top: 100px;
-  font-size: 300%;
+  h1 {
+  margin: 60px;
+  font-size: 400%;
   font-weight: 800;
-}
+  }
 
-.login-form {
-  
+  label {
+    font-size: 135%;
+  }
+
+  .login-right-form {
+    margin-top: 80px;
+
+    .login-form {
+      width: 100%;
+      
+    }
+  }
+
+  .login-button {
+    margin-top: 30px;
+  }
+
 }
 
 </style>

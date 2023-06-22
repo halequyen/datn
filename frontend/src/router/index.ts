@@ -7,12 +7,10 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue')
+      component: HomeView,
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/login',
@@ -22,52 +20,82 @@ const router = createRouter({
     {
       path: '/patient_list',
       name: 'patient list',
-      component: () => import('../components/components/PatientList.vue')
+      component: () => import('../components/components/PatientList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/medicine_price_list',
       name: 'medicine price list',
-      component: () => import('../components/components/MedicinePriceList.vue')
+      component: () => import('../components/components/MedicinePriceList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/service_price_list',
       name: 'service price list',
-      component: () => import('../components/components/ServicePriceList.vue')
+      component: () => import('../components/components/ServicePriceList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/medicine_manage_list',
       name: 'medicine manage list',
-      component: () => import('../components/components/MedicineManageList.vue')
+      component: () => import('../components/components/MedicineManageList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/equipment_list',
       name: 'equipment list',
-      component: () => import('../components/components/EquipmentList.vue')
+      component: () => import('../components/components/EquipmentList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/material_list',
       name: 'material list',
-      component: () => import('../components/components/MaterialList.vue')
+      component: () => import('../components/components/MaterialList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/staff_list',
       name: 'staff list',
-      component: () => import('../components/components/StaffList.vue')
+      component: () => import('../components/components/StaffList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/user_list',
       name: 'user list',
-      component: () => import('../components/components/UserList.vue')
+      component: () => import('../components/components/UserList.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/information',
       name: 'information',
-      component: () => import('../components/components/Information.vue')
+      component: () => import('../components/components/Information.vue'),
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/schedule',
       name: 'schedule',
-      component: () => import('../components/components/Schedule.vue')
+      component: () => import('../components/components/Schedule.vue'),
+      meta: {
+        requiresAuth: true
+      }
     }
   ]
 })

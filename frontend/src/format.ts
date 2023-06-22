@@ -99,3 +99,11 @@ export const gender: any = {
   '1': 'Nữ',
   '2': 'Khác'
 }
+
+export const userType: any = {
+  '0': 'Quản trị viên',
+  '1': 'Trợ lý',
+  '2': 'Quản lý thiết bị',
+  '3': 'Lễ tân',
+  '4': 'Bác sĩ'
+}

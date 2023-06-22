@@ -1,14 +1,18 @@
 {
-  "files": [],
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["element-plus/global"],
+    "ignoreDeprecations": "5.0",
+    "lib": ["es2017", "dom"]
+  },
+
   "references": [
     {
-      "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.vitest.json"
+      "path": "./tsconfig.config.json"
     }
   ]
 }
