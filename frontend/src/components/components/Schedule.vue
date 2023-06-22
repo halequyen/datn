@@ -18,6 +18,7 @@ interface Patient {
 const selectedDate = ref<any>(new Date().toISOString().split('T')[0])
 const patients = ref<Patient[]>([])
 const search = ref('')
+const filterSlot = ref('')
 const showPatientForm = ref(false)
 const loading = ref(false)
 const pageSize = ref(10)
@@ -27,6 +28,7 @@ const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 const ruleScheduleFormRef = ref<InstanceType<typeof ElDrawer>>()
 const showScheduleForm = ref(false)
 const calendarData = ref<Date>()
+const assignDateData = ref<Patient[]>([])
 let timer: ReturnType<typeof setTimeout> | undefined
 
 const scheduleFormData = ref<Patient>({
@@ -58,7 +60,70 @@ const compareDate = (date1: string, date2: string) => {
 
 const filteredData = computed(() => {
   const data = filterTableData.value.filter((item: any) =>
-    compareDate(item.date, selectedDate.value)
+    compareDate(item.date, selectedDate.value) && item.timeSlot === filterSlot.value
+  )
+  return data
+})
+
+const badge1 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '1'
+  )
+  return data
+})
+
+const badge2 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '2'
+  )
+  return data
+})
+
+const badge3 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '3'
+  )
+  return data
+})
+
+const badge4 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '4'
+  )
+  return data
+})
+
+const badge5 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '5'
+  )
+  return data
+})
+
+const badge6 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '6'
+  )
+  return data
+})
+
+const badge7 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '7'
+  )
+  return data
+})
+
+const badge8 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '8'
+  )
+  return data
+})
+
+const badge9 = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value) && item.timeSlot === '9'
   )
   return data
 })
@@ -88,8 +153,9 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
   pagingData.value = filteredData.value.slice(startIndex, endIndex)
 }
 
-const openPatientForm = () => {
+const openPatientForm = (timeSlot: any) => {
   showPatientForm.value = true
+  filterSlot.value = timeSlot
 }
 
 const handleClose = () => {
@@ -119,7 +185,6 @@ const resetForm = () => {
 const onClick = (item: any) => {
   const newSchedule = { ...scheduleFormData.value }
   console.log(newSchedule)
-  newSchedule.date = formatDate(new Date().toDateString())
   if (newSchedule._id) {
     axios
       .put(`http://127.0.0.1:3333/schedule/${newSchedule._id}`, newSchedule)
@@ -142,6 +207,8 @@ const onClick = (item: any) => {
         })
       })
   } else {
+    newSchedule.date = selectedDate.value
+    newSchedule.timeSlot = filterSlot.value
     axios
       .post('http://127.0.0.1:3333/schedule', newSchedule)
       .then((response) => {
@@ -231,6 +298,11 @@ watch([search, selectedDate], () => {
   pagingData.value = filteredData.value.slice(0, pageSize.value)
 })
 
+watch([filterSlot, selectedDate], () => {
+  currentPage.value = 1
+  pagingData.value = filteredData.value.slice(0, pageSize.value)
+})
+
 watch(
   () => calendarData.value,
   () => {
@@ -254,35 +326,35 @@ watch(
     <div class="schedule-pick">
       <div class="schedule-pick-morning d-flex">
         <div class="morning">Sáng:</div>
-        <el-badge :value="filteredData.length" :max="10" class="item">
-          <el-button @click="openPatientForm" size="large" type="primary">08:00 - 09:00</el-button>
+        <el-badge :value="badge1.length" :max="10" class="item">
+          <el-button @click="openPatientForm('1')" size="large" type="primary">08:00 - 09:00</el-button>
         </el-badge>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">09:00 - 10:00</el-button>
+        <el-badge :value="badge2.length" :max="10" class="item">
+          <el-button @click="openPatientForm('2')" size="large" type="primary">09:00 - 10:00</el-button>
         </el-badge>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">10:00 - 11:00</el-button>
+        <el-badge :value="badge3.length" :max="10" class="item">
+          <el-button @click="openPatientForm('3')" size="large" type="primary">10:00 - 11:00</el-button>
         </el-badge>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">11:00 - 12:00</el-button>
+        <el-badge :value="badge4.length" :max="10" class="item">
+          <el-button @click="openPatientForm('4')" size="large" type="primary">11:00 - 12:00</el-button>
         </el-badge>
       </div>
       <div class="schedule-pick-afternoon d-flex">
         <div class="afternoon">Chiều:</div>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">13:00 - 14:00</el-button>
+        <el-badge :value="badge5.length" :max="10" class="item">
+          <el-button @click="openPatientForm('5')" size="large" type="primary">13:00 - 14:00</el-button>
         </el-badge>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">14:00 - 15:00</el-button>
+        <el-badge :value="badge6.length" :max="10" class="item">
+          <el-button @click="openPatientForm('6')" size="large" type="primary">14:00 - 15:00</el-button>
         </el-badge>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">15:00 - 16:00</el-button>
+        <el-badge :value="badge7.length" :max="10" class="item">
+          <el-button @click="openPatientForm('7')" size="large" type="primary">15:00 - 16:00</el-button>
         </el-badge>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">16:00 - 17:00</el-button>
+        <el-badge :value="badge8.length" :max="10" class="item">
+          <el-button @click="openPatientForm('8')" size="large" type="primary">16:00 - 17:00</el-button>
         </el-badge>
-        <el-badge :value="4" :max="10" class="item">
-          <el-button size="large" type="primary">17:00 - 18:00</el-button>
+        <el-badge :value="badge9.length" :max="10" class="item">
+          <el-button @click="openPatientForm('9')" size="large" type="primary">17:00 - 18:00</el-button>
         </el-badge>
       </div>
     </div>
@@ -382,7 +454,7 @@ watch(
       </el-form>
       <div class="schedule-drawer-button">
         <el-button @click="cancelForm">Hủy bỏ</el-button>
-        <el-button type="primary" :loading="loading" @click="handleOnClick">{{
+        <el-button type="primary" :loading="loading" @click="handleOnClick(assignDateData)">{{
           loading ? '' : 'Lưu'
         }}</el-button>
       </div>
