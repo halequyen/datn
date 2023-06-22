@@ -1,28 +1,20 @@
-export interface Bills {
-  _id: string;
-  name: string;
-  quantity: string;
-  price: string;
-  patientId: string;
-  date: string;
-}
+import moment from 'moment'
 
+export interface Bills {
+  _id: string
+  name: string
+  quantity: string
+  price: string
+  patientId: string
+  date: string
+}
 
 export function formatDate(dob: string | Date): string {
   if (!dob) {
     return ''
   }
 
-  const date = new Date(dob)
-  if (isNaN(date.getTime())) {
-    return ''
-  }
-
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const year = date.getFullYear()
-
-  return `${day}/${month}/${year}`
+  return moment(dob).format('DD/MM/YYYY')
 }
 
 export function formatExpense(amount: number): string {

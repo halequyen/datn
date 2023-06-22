@@ -7,7 +7,9 @@
     },
     "types": ["element-plus/global"],
     "ignoreDeprecations": "5.0",
-    "lib": ["es2017", "dom"]
+    "lib": ["es2017", "dom"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
 
   "references": [

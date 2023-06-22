@@ -20,6 +20,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.3",
     "axios": "^1.4.0",
     "element-plus": "^2.3.5",
+    "moment": "^2.29.4",
     "sass": "^1.62.1",
     "vue": "^3.3.2",
     "vue-router": "^4.2.0",

@@ -4,6 +4,8 @@ import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import { formatDate } from '../../format'
 import { Edit } from '@element-plus/icons-vue'
+import moment from 'moment'
+
 interface Patient {
   _id: String
   name: String
@@ -24,7 +26,7 @@ const pagingData = ref<Patient[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 const ruleScheduleFormRef = ref<InstanceType<typeof ElDrawer>>()
 const showScheduleForm = ref(false)
-
+const calendarData = ref<Date>()
 let timer: ReturnType<typeof setTimeout> | undefined
 
 const scheduleFormData = ref<Patient>({
@@ -34,6 +36,31 @@ const scheduleFormData = ref<Patient>({
   note: '',
   date: '',
   timeSlot: ''
+})
+
+const filterTableData = computed(() =>
+  patients.value.filter(
+    (data) => !search.value || data.phone.toLowerCase().includes(search.value.toLowerCase())
+  )
+)
+
+const compareDate = (date1: string, date2: string) => {
+  if (!date1 || !date2) {
+    return false
+  }
+  const arr1 = date1.split('/')
+  const arr2 = date2.split('/')
+  if (arr1[0] === arr2[0] && arr1[1] === arr2[1] && arr1[2] === arr2[2]) {
+    return true
+  }
+  return false
+}
+
+const filteredData = computed(() => {
+  const data = filterTableData.value.filter((item: any) =>
+    compareDate(item.date, selectedDate.value)
+  )
+  return data
 })
 
 const fetchPatients = async () => {
@@ -49,22 +76,9 @@ const fetchPatients = async () => {
   }
 }
 
-const filterTableData = computed(() =>
-  patients.value.filter(
-    (data) => !search.value || data.phone.toLowerCase().includes(search.value.toLowerCase())
-  )
-)
-
 const handleDateSelect = (date: any) => {
-  selectedDate.value = formatDate(date.day)
+  selectedDate.value = formatDate(date)
 }
-
-const filteredData = computed(() => {
-  const data = filterTableData.value.filter(
-    (item: any) => formatDate(item.date) === formatDate(selectedDate.value)
-  )
-  return data
-})
 
 const onPageChange = async (pageNumber: number): Promise<void> => {
   currentPage.value = pageNumber
@@ -216,12 +230,19 @@ watch([search, selectedDate], () => {
   currentPage.value = 1
   pagingData.value = filteredData.value.slice(0, pageSize.value)
 })
+
+watch(
+  () => calendarData.value,
+  () => {
+    handleDateSelect(calendarData.value)
+  }
+)
 </script>
 
 <template>
-  <el-calendar>
+  <el-calendar v-model="calendarData">
     <template #date-cell="{ data }">
-      <p @click="handleDateSelect(data)" :class="data.isSelected ? 'is-selected' : ''">
+      <p :class="data.isSelected ? 'is-selected' : ''">
         {{ data.day.split('-')[2] }}
         {{ data.isSelected ? '✔️' : '' }}
       </p>
