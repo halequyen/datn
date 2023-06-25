@@ -317,7 +317,7 @@ watch(search, () => {
           </el-select>
         </el-form-item>
         <el-form-item label="Ngày sinh" prop="dob" class="staff-form-item">
-          <el-input v-model="staffFromData.dob"></el-input>
+          <el-date-picker v-model="staffFromData.dob" type="date" placeholder="Chọn ngày sinh" />
         </el-form-item>
         <el-form-item label="Số điện thoại" prop="phone" class="staff-form-item">
           <el-input v-model="staffFromData.phone"></el-input>
