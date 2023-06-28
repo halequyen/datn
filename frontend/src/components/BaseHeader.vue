@@ -1,27 +1,77 @@
-<script setup></script>
+<script setup>
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { store } from "@/stores"
+import { computed, watch, ref, reactive, onMounted } from 'vue'
+import Cookies from 'js-cookie'
+
+const token = computed(() => store.state.token)
+console.log(token.value);
+
+const router = useRouter()
+
+const logout = async () => {
+  try {
+    await store.dispatch('logout')
+    router.push('/login');
+  } catch (error) {
+    console.error('Đăng xuất thất bại:', error.message);
+  }
+};
+
+const refreshToken = async () => {
+  try {
+    await store.dispatch('refreshToken')
+  } catch (error) {
+    console.error('Làm mới token thất bại:', error.message);
+  }
+};
+
+onMounted(async () => {
+  if (!token.value) {
+    await refreshToken()
+  }
+});
+
+watch(token, (newValue) => {
+  if (newValue === undefined) {
+    refreshToken()
+  }
+});
+
+</script>
 
 <template>
   <header class="header">
     <ul>
       <div class="aside-left-logo">
-      <img class="aside-left-logo-image" src="../assets/images/SkinSyncLogo.png" alt="" style="width: 50px;">
-      <span class="aside-left-logo-text">SKINSYNC</span>
-    </div>
+        <router-link class="no-active-style" to="/">
+          <img
+            class="aside-left-logo-image"
+            src="../assets/images/SkinSyncLogo.png"
+            alt=""
+            style="width: 50px"
+          />
+          <span class="aside-left-logo-text">SKINSYNC</span>
+        </router-link>
+      </div>
     </ul>
-    <ul class="login">
+    <ul v-if="token" class="login">
       <li><b>Admin</b></li>
       <li>
         <el-dropdown trigger="click">
-        <span class="el-dropdown-link">
-          <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-gear" /><el-icon class="el-icon--right"><arrow-down /></el-icon>
-        </span>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item>Đổi mật khẩu</el-dropdown-item>
-            <el-dropdown-item>Đăng xuất</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+          <span class="el-dropdown-link">
+            <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-gear" /><el-icon
+              class="el-icon--right"
+              ><arrow-down
+            /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item>Đổi mật khẩu</el-dropdown-item>
+              <el-dropdown-item @click="logout">Đăng xuất</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </li>
     </ul>
   </header>
@@ -55,7 +105,6 @@ header ul {
 }
 
 .header-title {
-
   font-size: 150%;
 }
 

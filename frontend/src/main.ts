@@ -26,6 +26,8 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import * as dateFns from 'date-fns';
 
+import CKEditor from '@ckeditor/ckeditor5-vue';
+
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
@@ -36,4 +38,5 @@ app.use(store, key)
 app.use(ElementPlus)
 app.component('font-awesome-icon', FontAwesomeIcon)
 app.use(router)
+app.use(CKEditor)
 app.mount('#app')

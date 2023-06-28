@@ -36,7 +36,7 @@ const fetchServicePrices = async () => {
     const response = await axios.get('http://127.0.0.1:3333/service_price')
     servicePrices.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
-    onPageChange(currentPage.value) 
+    onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -159,9 +159,9 @@ const deleteService = (service: ServicePrice) => {
         .catch((error) => {
           console.log(error)
           ElNotification({
-          title: 'Thất bại',
-          type: 'error'
-        })
+            title: 'Thất bại',
+            type: 'error'
+          })
         })
     })
     .catch(() => {
@@ -216,7 +216,7 @@ watch(search, () => {
           </template>
         </el-table-column>
         <el-table-column prop="description" label="Mô tả" min-width="400" />
-        <el-table-column label="Đơn giá" min-width="200" >
+        <el-table-column label="Đơn giá" min-width="200">
           <template #default="scope">
             <div>
               {{ formatExpense(parseInt(scope.row.price)) }}

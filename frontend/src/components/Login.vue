@@ -2,13 +2,10 @@
 import { defineComponent, ref, reactive } from 'vue';
 import {store} from "@/stores"
 
-console.log(store.state)
-
 const login_form = reactive({
   userName: '',
   password: ''
 });
-// const store = useStore()
 
 const rules = ref({
   userName: [
@@ -23,13 +20,10 @@ const rules = ref({
 const login = async () => {
   try {
     await store.dispatch('login', login_form);
-    store.commit('SET_USER', login_form.userName);
   } catch (error) {
     console.error('Đăng nhập thất bại:', error.message);
   }
 };
-
-console.log(login_form);
 
 </script>
 

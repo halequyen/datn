@@ -3,6 +3,8 @@ import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import html2pdf from 'html2pdf.js'
+import PatientDetail from '../common/PatientDetail.vue'
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import {
   formatDate,
   patientType,
@@ -26,6 +28,7 @@ interface Patient {
   expense: String
   room: String
   address: String
+  description: String
 }
 
 interface PatientBill {
@@ -37,17 +40,21 @@ interface PatientBill {
   date: String
 }
 
+const editor = ClassicEditor
 const patients = ref<Patient[]>([])
 const search = ref('')
 const showPatientForm = ref(false)
+const showPatientDetail = ref(false)
 const loading = ref(false)
 const pageSize = ref(10)
 const currentPage = ref(1)
 const pagingData = ref<Patient[]>([])
 const assignPatientData = ref<Patient[]>([])
+const assignPatientDataDetail = ref<Patient[]>([])
 const ruleFormRef = ref<InstanceType<typeof ElDrawer>>()
 const ruleBillFormRef = ref<InstanceType<typeof ElDrawer>>()
 const dialogTableVisible = ref(false)
+const dialogTableVisibleDetail = ref(false)
 const patientBills = ref<PatientBill[]>([])
 const patientBillDataFormat = ref<PatientBill[]>([])
 const patientBillData = ref<PatientBill[]>([])
@@ -68,7 +75,8 @@ const patientFormData = ref<Patient>({
   state: '',
   expense: '',
   room: '',
-  address: ''
+  address: '',
+  description: ''
 })
 
 const patientBillFormData = ref<PatientBill>({
@@ -298,11 +306,11 @@ const filterTableData = computed(() =>
 
 const filterTableDataSorted = computed(() => {
   return filterTableData.value.slice().sort((a, b) => {
-    const dateA = new Date(a.checkDate).getTime();
-    const dateB = new Date(b.checkDate).getTime();
-    return dateB - dateA;
-  });
-});
+    const dateA = new Date(a.checkDate).getTime()
+    const dateB = new Date(b.checkDate).getTime()
+    return dateB - dateA
+  })
+})
 
 const onPageChange = async (pageNumber: number): Promise<void> => {
   currentPage.value = pageNumber
@@ -314,6 +322,11 @@ const onPageChange = async (pageNumber: number): Promise<void> => {
 
 const openPatientForm = (patient: Patient) => {
   showPatientForm.value = true
+  patientFormData.value = { ...patient }
+}
+
+const openPatientDetail = (patient: Patient) => {
+  showPatientDetail.value = true
   patientFormData.value = { ...patient }
 }
 
@@ -330,7 +343,8 @@ const resetForm = () => {
     state: '',
     expense: '',
     room: '',
-    address: ''
+    address: '',
+    description: ''
   }
 }
 
@@ -357,6 +371,7 @@ const onClick = (item: any) => {
         resetForm()
         fetchPatients()
         showPatientForm.value = false
+        showPatientDetail.value = false
         loading.value = false
         ElNotification({
           title: 'Thành công',
@@ -378,6 +393,7 @@ const onClick = (item: any) => {
         resetForm()
         fetchPatients()
         showPatientForm.value = false
+        showPatientDetail.value = false
         loading.value = false
         ElNotification({
           title: 'Thành công',
@@ -395,6 +411,20 @@ const onClick = (item: any) => {
 }
 
 const handleOnClick = async (item: any) => {
+  try {
+    await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Hủy'
+    })
+    loading.value = true
+    await onClick(item)
+    loading.value = false
+  } catch (error) {
+    console.log('error')
+  }
+}
+
+const handleOnClickDetail = async (item: any) => {
   try {
     await ElMessageBox.confirm('Bạn muốn lưu?', 'Xác nhận', {
       confirmButtonText: 'Lưu',
@@ -448,6 +478,12 @@ const cancelForm = () => {
   clearTimeout(timer)
 }
 
+const cancelDetail = () => {
+  loading.value = false
+  showPatientDetail.value = false
+  clearTimeout(timer)
+}
+
 const exportToPDF = () => {
   const elementToConvert = document.getElementById('element-to-convert')
   const elementToExclude = document.getElementById('element-to-exclude')
@@ -495,6 +531,16 @@ const fetchInformations = async () => {
   }
 }
 
+const editorConfig = {
+  image: {
+    toolbar: ['imageUpload', 'toggleImageCaption', 'imageTextAlternative'],
+    upload: {
+      types: ['jpeg', 'png', 'gif', 'bmp'],
+      uploadUrl: 'http://127.0.0.1:3333'
+    }
+  }
+}
+
 const rules = ref({
   name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
   phone: [{ required: true, message: 'Vui lòng không bỏ trống' }],
@@ -535,10 +581,10 @@ watch(search, () => {
       </div>
     </div>
     <el-scrollbar>
-      <el-table :data="pagingData">
+      <el-table v-loading="loading" :data="pagingData">
         <el-table-column label="Tên bệnh nhân" min-width="200">
           <template #default="scope">
-            <div class="patient-name primary-color">
+            <div @click="openPatientDetail(scope.row)" class="patient-name primary-color">
               {{ scope.row.name }}
             </div>
           </template>
@@ -703,9 +749,32 @@ watch(search, () => {
     </div>
   </el-drawer>
 
+  <el-dialog v-model="showPatientDetail">
+    <div>
+      <el-form :model="patientFormData">
+        <h1 class="patient-detail-form-name">{{ patientFormData.name }}</h1>
+        <div class="ptient-ckeditor">
+          <ckeditor
+            :editor="editor"
+            v-model="patientFormData.description"
+            :config="editorConfig"
+          ></ckeditor>
+        </div>
+        <div class="patient-detail-button">
+          <el-button @click="cancelDetail">Hủy bỏ</el-button>
+          <el-button type="primary" @click="handleOnClickDetail">{{
+            loading ? '' : 'Lưu'
+          }}</el-button>
+        </div>
+      </el-form>
+    </div>
+  </el-dialog>
+
   <el-dialog v-model="dialogTableVisible">
     <div class="d-flex bill-header">
-      <div class="export" @click="exportToPDF"><font-awesome-icon style="margin-right: 8px;" icon="fa-solid fa-file-arrow-down" /> Xuất PDF</div>
+      <div class="export" @click="exportToPDF">
+        <font-awesome-icon style="margin-right: 8px" icon="fa-solid fa-file-arrow-down" /> Xuất PDF
+      </div>
       <div class="d-flex add-icon-bill">
         <font-awesome-icon
           class="icon-add-bill"
@@ -715,7 +784,11 @@ watch(search, () => {
         <div class="title-add-bill">Thêm</div>
       </div>
     </div>
-    <div id="element-to-convert" class="bill" style="font-family: 'Times New Roman', serif; margin: 30px;">
+    <div
+      id="element-to-convert"
+      class="bill"
+      style="font-family: 'Times New Roman', serif; margin: 30px"
+    >
       <div class="bill-header-information d-flex">
         <div class="bill-header-information-left">
           <img class="bill-logo" src="../../assets/images/SkinSyncLogo.png" alt="" />
@@ -733,8 +806,8 @@ watch(search, () => {
           <p>{{ billDate }}</p>
         </div>
       </div>
-      <div class="d-flex" style="margin-bottom: 10px; margin-top: 40px; color: #000;">
-        <div style="margin-right: 20px;">
+      <div class="d-flex" style="margin-bottom: 10px; margin-top: 40px; color: #000">
+        <div style="margin-right: 20px">
           <div>Bệnh nhân:</div>
           <div>Điện thoại:</div>
           <div>Điạ chỉ:</div>
@@ -745,17 +818,37 @@ watch(search, () => {
           <div>{{ assignPatientData[0].address }}</div>
         </div>
       </div>
-      <el-table border style="color: black;" :data="patientBillData">
-        <el-table-column label-class-name="bill-table-label" property="name" label="Tên dịch vụ/ thuốc" min-width="310" />
-        <el-table-column label-class-name="bill-table-label" property="price" label="Đơn giá" min-width="140">
+      <el-table border style="color: black" :data="patientBillData">
+        <el-table-column
+          label-class-name="bill-table-label"
+          property="name"
+          label="Tên dịch vụ/ thuốc"
+          width="310"
+        />
+        <el-table-column
+          label-class-name="bill-table-label"
+          property="price"
+          label="Đơn giá"
+          width="140"
+        >
           <template #default="scope">
             <div>
               {{ formatExpense(parseInt(scope.row.price)) }}
             </div>
           </template>
         </el-table-column>
-        <el-table-column label-class-name="bill-table-label" property="quantity" label="Số lượng" min-width="120" />
-        <el-table-column label-class-name="bill-table-label" property="total" label="Thành tiền" min-width="140">
+        <el-table-column
+          label-class-name="bill-table-label"
+          property="quantity"
+          label="Số lượng"
+          width="120"
+        />
+        <el-table-column
+          label-class-name="bill-table-label"
+          property="total"
+          label="Thành tiền"
+          width="140"
+        >
           <template #default="scope">
             <div>
               {{ formatTotalPrices(scope.row) }}
@@ -779,12 +872,8 @@ watch(search, () => {
       </el-table>
       <div class="total-bill">Tổng thanh toán: {{ formatExpense(totalPrice) }}</div>
       <div class="d-flex bill-signature">
-        <b>
-          Người lập phiếu
-        </b>
-        <b>
-          Người thanh toán
-        </b>
+        <b> Người lập phiếu </b>
+        <b> Người thanh toán </b>
       </div>
     </div>
   </el-dialog>
@@ -950,13 +1039,32 @@ h1 {
   margin: 60px 90px 100px 90px;
   display: flex;
   justify-content: space-between;
-  
 }
+
+.patient-detail-form-name {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 200%;
+}
+
+.patient-detail-button {
+  display: flex;
+  justify-content: right;
+  margin-top: 20px;
+}
+
 
 </style>
 
-<style>
+<style lang="scss">
 .bill-table-label {
   color: #000;
+}
+
+.ptient-ckeditor {
+  .ck-editor__editable{
+    min-height: 200px;
+  }
 }
 </style>

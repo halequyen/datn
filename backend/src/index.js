@@ -3,7 +3,9 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require('cors');
 const bodyParser = require("body-parser");
+const jwt = require('jsonwebtoken');
 
+const token = jwt.sign({ foo: 'bar' }, 'shhhhh');
 const route = require('./routes')
 const db = require('./config/db')
 const mongoose = require('mongoose')
@@ -26,7 +28,6 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   next();
 });
-
 
 route(app)
 

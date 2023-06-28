@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import { formatExpense, formatTotalPrices } from '../../format'
+import { UploadFilled } from '@element-plus/icons-vue'
 
 interface Equipment {
   _id: String
@@ -11,6 +12,7 @@ interface Equipment {
   quantity: Number
   price: Number
   type: String
+  image: String
 }
 
 const equipments = ref<Equipment[]>([])
@@ -30,7 +32,8 @@ const equipmentFromData = ref<Equipment>({
   unit: '',
   quantity: 0,
   price: 0,
-  type: ''
+  type: '',
+  image: ''
 })
 
 const fetchEquipments = async () => {
@@ -38,7 +41,7 @@ const fetchEquipments = async () => {
     const response = await axios.get('http://127.0.0.1:3333/equipment')
     equipments.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
-    onPageChange(currentPage.value) 
+    onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
     console.log(error)
@@ -66,7 +69,8 @@ const resetForm = () => {
     unit: '',
     quantity: 0,
     price: 0,
-    type: ''
+    type: '',
+    image: ''
   }
 }
 
@@ -121,7 +125,7 @@ const onClick = (item: any) => {
           type: 'error'
         })
       })
-    }
+  }
 }
 
 const handleOnClick = async (item: any) => {
@@ -162,9 +166,9 @@ const HandleDeleteEquipment = (equipment: Equipment) => {
         .catch((error) => {
           console.log(error)
           ElNotification({
-          title: 'Thất bại',
-          type: 'error'
-        })
+            title: 'Thất bại',
+            type: 'error'
+          })
         })
     })
     .catch(() => {
@@ -221,7 +225,7 @@ watch(search, () => {
           </template>
         </el-table-column>
         <el-table-column prop="unit" label="ĐVT" min-width="90" />
-        <el-table-column prop="price" label="Đơn giá" min-width="150" >
+        <el-table-column prop="price" label="Đơn giá" min-width="150">
           <template #default="scope">
             <div>
               {{ formatExpense(parseInt(scope.row.price)) }}
@@ -229,7 +233,7 @@ watch(search, () => {
           </template>
         </el-table-column>
         <el-table-column prop="quantity" label="Số lượng" min-width="150" />
-        <el-table-column label="Tổng giá trị" min-width="150" >
+        <el-table-column label="Tổng giá trị" min-width="150">
           <template #default="scope">
             <div>
               {{ formatTotalPrices(scope.row) }}
@@ -297,6 +301,15 @@ watch(search, () => {
         </el-form-item>
         <el-form-item label="Phân loại" prop="type" class="equipment-form-item">
           <el-input v-model="equipmentFromData.type"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-upload class="upload-demo" drag v-model="equipmentFromData.image" multiple>
+            <font-awesome-icon icon="fa-solid fa-upload" class="el-icon--upload" />
+            <div class="el-upload__text">Thả tập tin ở đây hoặc <em>click để tải lên</em></div>
+            <template #tip>
+              <div class="el-upload__tip">Ảnh định dạng jpg/png với kích thước nhỏ hơn 500kb</div>
+            </template>
+          </el-upload>
         </el-form-item>
       </el-form>
       <div class="equipment-drawer-button">

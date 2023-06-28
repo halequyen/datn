@@ -19,9 +19,9 @@
 
 <style scoped>
 .login {
-  /* display: flex; */
-  /* justify-content: center; */
-  /* align-items: center; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
   /* min-height: 100vh;  */
 }
 
@@ -30,13 +30,13 @@
 }
 
 .login-left-logo {
-  width: 400px;
+  width: 300px;
 
 }
 
 .login-right {
-  margin-top: 250px;
-  font-size: 250%;
+  margin-top: 200px;
+  font-size: 200%;
   font-weight: 800;
 }
 

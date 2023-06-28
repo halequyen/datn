@@ -23,7 +23,8 @@ const Patient = new Schema({
     nationality: { type: String },
     city: { type: String },
     district: { type: String },
-    address: { type: String }
+    address: { type: String },
+    description: { type: String }
 })
 
 module.exports = mongoose.model('Patient', Patient)

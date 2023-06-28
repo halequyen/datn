@@ -9,6 +9,7 @@ const Equipment = new Schema({
     price: { type: String },
     type: { type: String,
         enum:['0', '1'] },
+    image: { type: String }
 })
 
 module.exports = mongoose.model('Equipment', Equipment)

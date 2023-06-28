@@ -1,5 +1,10 @@
 <script lang="ts" setup>
 import { RouterLink, RouterView } from 'vue-router'
+import { store } from "@/stores"
+import { computed, watch, ref, reactive, onMounted } from 'vue'
+
+const rule = computed(() => store.state.rule)
+console.log(rule);
 
 </script>
 
@@ -29,7 +34,7 @@ import { RouterLink, RouterView } from 'vue-router'
             <el-menu-item index="3-2"><router-link class="no-active-style" to="/medicine_manage_list">Thuốc</router-link></el-menu-item>
             <el-menu-item index="3-3"><router-link class="no-active-style" to="/material_list">Vật tư</router-link></el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="4">
+        <el-sub-menu v-if="rule === 'admin'" index="4">
           <template #title>
             <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-image-portrait" />Quản trị
           </template>

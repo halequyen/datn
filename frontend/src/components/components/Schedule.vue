@@ -312,6 +312,7 @@ watch(
 </script>
 
 <template>
+  <h1 class="schedule-title">LỊCH HẸN KHÁM</h1>
   <el-calendar v-model="calendarData">
     <template #date-cell="{ data }">
       <p :class="data.isSelected ? 'is-selected' : ''">
@@ -463,6 +464,11 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+
+.schedule-title {
+  margin: 20px 0 0 20px;
+  font-size: 200%;
+}
 .schedule {
   margin: 10px;
 
