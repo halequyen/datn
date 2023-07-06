@@ -8,7 +8,7 @@ const User = new Schema({
     ownerId: { type: String },
     owner: { type: String },
     type: { type: String,
-        enum:['0', '1', '2', '3', '4'] },
+        enum:['0', '1', '2', '3'] },
     
 })
 

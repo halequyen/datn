@@ -21,10 +21,9 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { faEye } from '@fortawesome/free-solid-svg-icons'
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons'
+import { faBell } from '@fortawesome/free-solid-svg-icons'
 
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-
-import * as dateFns from 'date-fns';
 
 import CKEditor from '@ckeditor/ckeditor5-vue';
 
@@ -33,7 +32,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-library.add(faHouseChimneyMedical, faImagePortrait, faFileInvoiceDollar, faScrewdriverWrench, faPencil, faTrashCan, faGear, faMagnifyingGlass, faPlus, faEye, faEyeSlash, faFileArrowDown)
+library.add(faHouseChimneyMedical, faImagePortrait, faFileInvoiceDollar, faScrewdriverWrench, faPencil, faTrashCan, faGear, faMagnifyingGlass, faPlus, faEye, faEyeSlash, faFileArrowDown, faBell)
 app.use(store, key)
 app.use(ElementPlus)
 app.component('font-awesome-icon', FontAwesomeIcon)

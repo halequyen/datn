@@ -94,8 +94,12 @@ export const gender: any = {
 
 export const userType: any = {
   '0': 'Quản trị viên',
-  '1': 'Trợ lý',
-  '2': 'Quản lý thiết bị',
-  '3': 'Lễ tân',
-  '4': 'Bác sĩ'
+  '1': 'Quản lý thiết bị',
+  '2': 'Lễ tân',
+  '3': 'Bác sĩ'
+}
+
+export const scheduleServiceType: any = {
+  '0': 'Thăm khám',
+  '1': 'Điều trị',
 }

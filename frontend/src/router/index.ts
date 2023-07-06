@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../components/Main.vue'
+import { store } from "@/stores"
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -96,8 +97,29 @@ const router = createRouter({
       meta: {
         requiresAuth: true
       }
+    },
+    {
+      path: '/change_password',
+      name: 'change password',
+      component: () => import('../components/ChangePassword.vue'),
+      meta: {
+        requiresAuth: true
+      }
     }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.path === '/login' && store.state.token) {
+    next('/')
+    return
+  } 
+  if (to.matched.some(record => record.meta.requiresAuth) && !store.state.token) {
+    next('/login')
+    return
+  }
+
+  next()
 })
 
 export default router

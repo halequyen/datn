@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
-import { formatDate } from '../../format'
+import { formatDate, scheduleServiceType } from '../../format'
 import { Edit } from '@element-plus/icons-vue'
 import moment from 'moment'
 
@@ -13,6 +13,7 @@ interface Patient {
   note: String
   date: String | Date
   timeSlot: String
+  service: String
 }
 
 const selectedDate = ref<any>(new Date().toISOString().split('T')[0])
@@ -37,7 +38,8 @@ const scheduleFormData = ref<Patient>({
   phone: '',
   note: '',
   date: '',
-  timeSlot: ''
+  timeSlot: '',
+  service: ''
 })
 
 const filterTableData = computed(() =>
@@ -178,7 +180,8 @@ const resetForm = () => {
     phone: '',
     note: '',
     date: '',
-    timeSlot: ''
+    timeSlot: '',
+    service: ''
   }
 }
 
@@ -394,7 +397,14 @@ watch(
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="phone" label="Số điện thoại" min-width="100" />
+        <el-table-column prop="phone" label="Số điện thoại" min-width="110" />
+        <el-table-column label="Dịch vụ" min-width="100" >
+          <template #default="scope">
+            <div>
+              {{ scheduleServiceType[scope.row.service] }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="note" label="Ghi chú" min-width="150" />
         <el-table-column fixed="right" width="100">
           <template #default="scope">
@@ -448,6 +458,12 @@ watch(
         </el-form-item>
         <el-form-item label="Số điện thoại" prop="phone" class="patient-form-item">
           <el-input v-model="scheduleFormData.phone"></el-input>
+        </el-form-item>
+        <el-form-item label="Dịch vụ" prop="service" class="patient-form-item">
+          <el-select v-model="scheduleFormData.service" placeholder="Chọn dịch vụ">
+            <el-option label="Thăm khám" :value="'0'" />
+            <el-option label="Điều trị" :value="'1'" />
+          </el-select>
         </el-form-item>
         <el-form-item label="Ghi chú" prop="note" class="patient-form-item">
           <el-input v-model="scheduleFormData.note"></el-input>

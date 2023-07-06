@@ -52,6 +52,10 @@ class UserController {
           return res.status(200).json({
             message: "Đăng nhập thành công",
             token: token,
+            userName: userName,
+            type: user.type,
+            owner: user.owner,
+            password: user.password,
           });
         } else {
           return res.status(200).json("Tài khoản hoặc mật khẩu không đúng");
@@ -84,6 +88,10 @@ class UserController {
           );
           return res.status(200).json({
             token: token,
+            userName: user.userName,
+            type: user.type,
+            owner: user.owner,
+            password: user.password,
           });
         })
         .catch((err) => {

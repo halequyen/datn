@@ -7,10 +7,13 @@ import Cookies from 'js-cookie'
 const token = computed(() => store.state.token)
 console.log(token.value);
 
+const owner = localStorage.getItem('owner')
+
 const router = useRouter()
 
 const logout = async () => {
   try {
+    localStorage.clear()
     await store.dispatch('logout')
     router.push('/login');
   } catch (error) {
@@ -56,7 +59,28 @@ watch(token, (newValue) => {
       </div>
     </ul>
     <ul v-if="token" class="login">
-      <li><b>Admin</b></li>
+      <li style="margin-right: 40px; margin-top: -3px;"><b>{{ owner }}</b></li>
+      <li><el-dropdown trigger="click">
+          <span class="el-dropdown-link">
+            <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-bell" /><el-icon
+              class="el-icon--right"
+              ><arrow-down
+            /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item style="display: block; width: 400px;">
+                <h2 style="margin: 15px;">Thông báo</h2>
+                <div style="border-bottom: 1px solid #e6e7e8;"></div>
+                <div style="margin: 15px;">
+                  <b>Có đặt lịch mới</b>
+                  <div style="margin-top: 10px;">Tên bệnh nhân: </div>
+                  <div>Thời gian: </div>
+                </div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown></li>
       <li>
         <el-dropdown trigger="click">
           <span class="el-dropdown-link">
@@ -67,7 +91,7 @@ watch(token, (newValue) => {
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>Đổi mật khẩu</el-dropdown-item>
+              <el-dropdown-item><router-link class="no-active-style" to="/change_password">Đổi mật khẩu</router-link></el-dropdown-item>
               <el-dropdown-item @click="logout">Đăng xuất</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -114,7 +138,7 @@ header ul {
 }
 
 .login li {
-  margin-right: 25px;
+  margin-right: 10px;
 }
 
 .login b {
@@ -125,9 +149,14 @@ header ul {
 .login .font-awesome-icon {
   margin-top: 3px;
   font-size: 120%;
+
 }
 
 .login .font-awesome-icon:hover {
   color: black;
+}
+
+.login .el-icon svg {
+  display: none;
 }
 </style>

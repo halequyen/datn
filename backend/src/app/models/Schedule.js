@@ -8,7 +8,9 @@ const Schedule = new Schema({
     note: { type: String },
     date: { type: String },
     timeSlot: { type: String,
-        enum:['1', '2', '3', '4', '5', '6', '7', '8', '9'] },
+        enum: ['1', '2', '3', '4', '5', '6', '7', '8', '9'] },
+    service: { type: String,
+        enum: ['0', '1'] }
 })
 
 module.exports = mongoose.model('Schedule', Schedule)

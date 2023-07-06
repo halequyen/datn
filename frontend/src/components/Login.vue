@@ -1,13 +1,16 @@
-<script setup>
+<script lang="ts" setup>
 import { defineComponent, ref, reactive } from 'vue';
+import type { FormInstance, FormRules } from 'element-plus/lib/components/form/index.js'
 import {store} from "@/stores"
+
+const ruleFormRef = ref<FormInstance>()
 
 const login_form = reactive({
   userName: '',
   password: ''
 });
 
-const rules = ref({
+const rules = reactive<FormRules>({
   userName: [
     { required: true, message: 'Vui lòng nhập tên đăng nhập' },
     { pattern: /^[a-zA-Z0-9]+([._]?[a-zA-Z0-9]+)*$/, message: 'Tên đăng nhập không hợp lệ' }
@@ -17,12 +20,21 @@ const rules = ref({
   ],
 });
 
-const login = async () => {
-  try {
-    await store.dispatch('login', login_form);
-  } catch (error) {
-    console.error('Đăng nhập thất bại:', error.message);
+const login = async (formEl: FormInstance | undefined): Promise<void> => {
+  if (!formEl) {
+    return
   }
+  await formEl.validate(async (valid, fields) => {
+    if (valid) {
+      try {
+        await store.dispatch('login', login_form);
+      } catch (error) {
+        console.error('Đăng nhập thất bại:', error.message);
+      }
+    } else {
+      console.log('error submit!', fields)
+    }
+  })
 };
 
 </script>
@@ -44,7 +56,7 @@ const login = async () => {
             <el-input v-model="login_form.password" type="password"></el-input>
           </el-form-item>
           <el-form-item class="login-button" size="large">
-            <el-button type="primary" @click="login">Đăng nhập</el-button>
+            <el-button type="primary" @click="login(ruleFormRef)">Đăng nhập</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -52,6 +64,12 @@ const login = async () => {
   </template>
 
 <style scoped lang="scss">
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .login-left {
   margin: 50px;
 }
@@ -65,7 +83,7 @@ const login = async () => {
 
   h1 {
   margin: 60px;
-  font-size: 400%;
+  font-size: 500%;
   font-weight: 800;
   }
 
@@ -78,7 +96,6 @@ const login = async () => {
 
     .login-form {
       width: 100%;
-      
     }
   }
 

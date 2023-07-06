@@ -3,8 +3,9 @@ import { RouterLink, RouterView } from 'vue-router'
 import { store } from "@/stores"
 import { computed, watch, ref, reactive, onMounted } from 'vue'
 
-const rule = computed(() => store.state.rule)
-console.log(rule);
+// const rule = computed(() => store.state.rule)
+// console.log(rule.);
+const rule = localStorage.getItem('rule')
 
 </script>
 
@@ -12,21 +13,21 @@ console.log(rule);
   <el-aside width="200px">
     <el-scrollbar height="650px">
       <el-menu :default-openeds="['1', '3']">
-        <el-sub-menu index="1">
+        <el-sub-menu v-if="rule === 'admin' || rule === 'receptionist'  || rule === 'doctor'" index="1">
           <template #title>
             <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-house-chimney-medical" />Khám bệnh
           </template>
             <el-menu-item index="1-1"><router-link class="no-active-style" to="/patient_list">Danh sách ca khám</router-link></el-menu-item>
             <el-menu-item index="1-2"><router-link class="no-active-style" to="/schedule">Lịch hẹn khám</router-link></el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="2">
+        <el-sub-menu v-if="rule === 'admin' || rule === 'receptionist' || rule === 'equipmentManager'" index="2">
           <template #title>
             <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-file-invoice-dollar" />Quản lý bảng giá
           </template>
             <el-menu-item index="2-1"><router-link class="no-active-style" to="/service_price_list">Giá dịch vụ</router-link></el-menu-item>
             <el-menu-item index="2-2"><router-link class="no-active-style" to="/medicine_price_list">Giá thuốc</router-link></el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="3">
+        <el-sub-menu v-if="rule === 'admin' || rule === 'receptionist' || rule === 'equipmentManager'" index="3">
           <template #title>
             <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-screwdriver-wrench" />Quản lý vật tư
           </template>

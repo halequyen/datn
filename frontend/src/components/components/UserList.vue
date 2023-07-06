@@ -317,12 +317,11 @@ watch(staffs, () => {
           <el-input type="password" show-password="showPassword" v-model="userFromData.password"></el-input>
         </el-form-item>
         <el-form-item label="Phân loại" class="user-form-item">
-          <el-select v-model="userFromData.type" placeholder="Chọn giới tính">
+          <el-select v-model="userFromData.type" placeholder="Chọn loại tài khoản">
             <el-option label="Quản trị viên" :value="'0'" />
-            <el-option label="Trợ lý" :value="'1'" />
-            <el-option label="Quản lý thiết bị" :value="'2'" />
-            <el-option label="Lễ tân" :value="'3'" />
-            <el-option label="Bác sĩ" :value="'4'" />
+            <el-option label="Quản lý thiết bị" :value="'1'" />
+            <el-option label="Lễ tân" :value="'2'" />
+            <el-option label="Bác sĩ" :value="'3'" />
           </el-select>
         </el-form-item>
         <el-form-item label="Chủ sở hữu" class="user-form-item">
