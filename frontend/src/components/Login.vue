@@ -82,7 +82,7 @@ const login = async (formEl: FormInstance | undefined): Promise<void> => {
   margin: 50px;
 
   h1 {
-  margin: 60px;
+  margin-top: 40px;
   font-size: 500%;
   font-weight: 800;
   }
@@ -92,10 +92,11 @@ const login = async (formEl: FormInstance | undefined): Promise<void> => {
   }
 
   .login-right-form {
-    margin-top: 80px;
+    margin-top: 70px;
+    margin-left: 60px;
 
     .login-form {
-      width: 100%;
+      width: 80%;
     }
   }
 

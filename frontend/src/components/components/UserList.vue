@@ -207,7 +207,9 @@ const cancelForm = () => {
 
 const rules = ref({
   userName: [{ required: true, message: 'Vui lòng không bỏ trống' }],
-  password: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+  password: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  type: [{ required: true, message: 'Vui lòng không bỏ trống', triggle: 'blur' }],
+  owner: [{ required: true, message: 'Vui lòng không bỏ trống' }]
 })
 
 onMounted(() => {
@@ -254,7 +256,6 @@ watch(staffs, () => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="password" label="Mật khẩu" min-width="200" />
         <el-table-column label="Phân loại" min-width="200">
           <template #default="scope">
             <div>
@@ -313,10 +314,10 @@ watch(staffs, () => {
         <el-form-item label="Tên đăng nhập" prop="userName" class="user-form-item">
           <el-input v-model="userFromData.userName"></el-input>
         </el-form-item>
-        <el-form-item label="Mật khẩu" class="user-form-item">
+        <el-form-item label="Mật khẩu" prop="password" class="user-form-item">
           <el-input type="password" show-password="showPassword" v-model="userFromData.password"></el-input>
         </el-form-item>
-        <el-form-item label="Phân loại" class="user-form-item">
+        <el-form-item label="Phân loại" prop="type" class="user-form-item">
           <el-select v-model="userFromData.type" placeholder="Chọn loại tài khoản">
             <el-option label="Quản trị viên" :value="'0'" />
             <el-option label="Quản lý thiết bị" :value="'1'" />
@@ -324,7 +325,7 @@ watch(staffs, () => {
             <el-option label="Bác sĩ" :value="'3'" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Chủ sở hữu" class="user-form-item">
+        <el-form-item label="Chủ sở hữu" prop="owner" class="user-form-item">
           <el-select
             v-model="selectedStaffId"
             filterable

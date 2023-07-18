@@ -22,6 +22,7 @@ import { faEye } from '@fortawesome/free-solid-svg-icons'
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons'
 import { faBell } from '@fortawesome/free-solid-svg-icons'
+import { faMapLocationDot } from '@fortawesome/free-solid-svg-icons'
 
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
@@ -32,7 +33,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-library.add(faHouseChimneyMedical, faImagePortrait, faFileInvoiceDollar, faScrewdriverWrench, faPencil, faTrashCan, faGear, faMagnifyingGlass, faPlus, faEye, faEyeSlash, faFileArrowDown, faBell)
+library.add(faHouseChimneyMedical, faImagePortrait, faFileInvoiceDollar, faScrewdriverWrench, faPencil, faTrashCan, faGear, faMagnifyingGlass, faPlus, faEye, faEyeSlash, faFileArrowDown, faBell, faMapLocationDot)
 app.use(store, key)
 app.use(ElementPlus)
 app.component('font-awesome-icon', FontAwesomeIcon)

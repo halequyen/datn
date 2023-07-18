@@ -3,7 +3,6 @@ import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import { formatExpense, formatTotalPrices } from '../../format'
-import { UploadFilled } from '@element-plus/icons-vue'
 
 interface Equipment {
   _id: String
@@ -301,15 +300,6 @@ watch(search, () => {
         </el-form-item>
         <el-form-item label="Phân loại" prop="type" class="equipment-form-item">
           <el-input v-model="equipmentFromData.type"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-upload class="upload-demo" drag v-model="equipmentFromData.image" multiple>
-            <font-awesome-icon icon="fa-solid fa-upload" class="el-icon--upload" />
-            <div class="el-upload__text">Thả tập tin ở đây hoặc <em>click để tải lên</em></div>
-            <template #tip>
-              <div class="el-upload__tip">Ảnh định dạng jpg/png với kích thước nhỏ hơn 500kb</div>
-            </template>
-          </el-upload>
         </el-form-item>
       </el-form>
       <div class="equipment-drawer-button">

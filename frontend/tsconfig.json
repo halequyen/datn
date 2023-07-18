@@ -5,13 +5,12 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["element-plus/global"],
+    "types": ["socket.io-client", "element-plus"],
     "ignoreDeprecations": "5.0",
     "lib": ["es2017", "dom"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-
   "references": [
     {
       "path": "./tsconfig.config.json"

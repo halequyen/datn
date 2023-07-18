@@ -3,6 +3,17 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { store } from "@/stores"
 import { computed, watch, ref, reactive, onMounted } from 'vue'
 import Cookies from 'js-cookie'
+import { io } from 'socket.io-client'
+const socket = io('http://localhost:3000')
+
+const notifications = ref([])
+socket.on('new-schedule', (schedule) => {
+  // Thêm thông báo mới vào danh sách
+  notifications.value.push(schedule)
+})
+const removeNotification = (index) => {
+  notifications.value.splice(index, 1)
+}
 
 const token = computed(() => store.state.token)
 console.log(token.value);
@@ -62,22 +73,18 @@ watch(token, (newValue) => {
       <li style="margin-right: 40px; margin-top: -3px;"><b>{{ owner }}</b></li>
       <li><el-dropdown trigger="click">
           <span class="el-dropdown-link">
-            <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-bell" /><el-icon
-              class="el-icon--right"
-              ><arrow-down
-            /></el-icon>
+            <el-badge v-if="notifications.length > 0" :value="notifications.length" :max="10" class="item">
+              <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-bell" />
+            </el-badge>
+            <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-bell" />
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item style="display: block; width: 400px;">
-                <h2 style="margin: 15px;">Thông báo</h2>
-                <div style="border-bottom: 1px solid #e6e7e8;"></div>
-                <div style="margin: 15px;">
-                  <b>Có đặt lịch mới</b>
-                  <div style="margin-top: 10px;">Tên bệnh nhân: </div>
-                  <div>Thời gian: </div>
-                </div>
+              <el-dropdown-item v-for="(notification, index) in notifications" :key="index">
+                {{ notification }}
+                <el-button type="text" @click="removeNotification(index)">Xóa</el-button>
               </el-dropdown-item>
+              <el-dropdown-item v-if="notifications.length === 0">Không có thông báo</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown></li>
@@ -101,7 +108,7 @@ watch(token, (newValue) => {
   </header>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 header {
   display: flex;
   justify-content: space-between;
@@ -135,6 +142,10 @@ header ul {
 .login {
   display: flex;
   margin-right: 50px;
+
+  .item {
+    margin-right: 15px;
+  }
 }
 
 .login li {

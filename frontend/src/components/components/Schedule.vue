@@ -5,6 +5,9 @@ import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import { formatDate, scheduleServiceType } from '../../format'
 import { Edit } from '@element-plus/icons-vue'
 import moment from 'moment'
+import { io } from 'socket.io-client';
+
+const socket = io('http://127.0.0.1:3333');
 
 interface Patient {
   _id: String
@@ -138,6 +141,14 @@ const fetchPatients = async () => {
     pagingData.value = filteredData.value.slice(0, pageSize.value)
     onPageChange(currentPage.value)
     console.log(response)
+    socket.on('new-schedule', (schedule: Patient) => {
+      patients.value.push(schedule);
+      ElNotification({
+        title: 'Đặt lịch mới',
+        message: `Có người đặt lịch: ${schedule.name}`,
+        type: 'success'
+      });
+    });
   } catch (error) {
     console.log(error)
   }

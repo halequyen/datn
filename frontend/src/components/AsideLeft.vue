@@ -3,8 +3,6 @@ import { RouterLink, RouterView } from 'vue-router'
 import { store } from "@/stores"
 import { computed, watch, ref, reactive, onMounted } from 'vue'
 
-// const rule = computed(() => store.state.rule)
-// console.log(rule.);
 const rule = localStorage.getItem('rule')
 
 </script>
@@ -35,13 +33,18 @@ const rule = localStorage.getItem('rule')
             <el-menu-item index="3-2"><router-link class="no-active-style" to="/medicine_manage_list">Thuốc</router-link></el-menu-item>
             <el-menu-item index="3-3"><router-link class="no-active-style" to="/material_list">Vật tư</router-link></el-menu-item>
         </el-sub-menu>
-        <el-sub-menu v-if="rule === 'admin'" index="4">
+        <el-menu-item index="4">
+          <template #title>
+            <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-map-location-dot" /><router-link class="no-active-style" to="/map">Bản đồ</router-link>
+          </template>
+        </el-menu-item> 
+        <el-sub-menu v-if="rule === 'admin'" index="5">
           <template #title>
             <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-image-portrait" />Quản trị
           </template>
-            <el-menu-item index="4-1"><router-link class="no-active-style" to="/staff_list">Nhân viên</router-link></el-menu-item>
-            <el-menu-item index="4-2"><router-link class="no-active-style" to="/user_list">Tài khoản</router-link></el-menu-item>
-            <el-menu-item index="4-3"><router-link class="no-active-style" to="/information">Thông tin cơ sở</router-link></el-menu-item>
+            <el-menu-item index="5-1"><router-link class="no-active-style" to="/staff_list">Nhân viên</router-link></el-menu-item>
+            <el-menu-item index="5-2"><router-link class="no-active-style" to="/user_list">Tài khoản</router-link></el-menu-item>
+            <el-menu-item index="5-3"><router-link class="no-active-style" to="/information">Thông tin cơ sở</router-link></el-menu-item>
         </el-sub-menu> 
       </el-menu>
     </el-scrollbar>
