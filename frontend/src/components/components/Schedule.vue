@@ -385,7 +385,7 @@ watch(
     size="50%"
   >
     <template #header>
-      <div class="patient-drawer-title">Danh sách cuộc hẹn</div>
+      <div class="patient-drawer-title">Danh sách lịch hẹn</div>
     </template>
     <div>
       <el-input
@@ -575,6 +575,6 @@ watch(
 }
 
 .el-calendar-table .el-calendar-day {
-  height: 60px;
+  height: 50px;
 }
 </style>

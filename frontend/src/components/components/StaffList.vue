@@ -17,6 +17,7 @@ interface Staff {
   phone: String
   jobTitle: String
   email: String
+  address: String
   state: String
 }
 
@@ -39,6 +40,7 @@ const staffFromData = ref<Staff>({
   phone: '',
   jobTitle: '',
   email: '',
+  address: '',
   state: ''
 })
 
@@ -77,6 +79,7 @@ const resetForm = () => {
     phone: '',
     jobTitle: '',
     email: '',
+    address: '',
     state: ''
   }
 }
@@ -247,6 +250,7 @@ watch(search, () => {
         </el-table-column>
         <el-table-column prop="phone" label="Số điện thoại" min-width="120" />
         <el-table-column prop="email" label="Email" min-width="150" />
+        <el-table-column prop="address" label="Địa chỉ" min-width="150" />
         <el-table-column prop="state" label="Trạng thái" min-width="140">
           <template #default="scope">
             <div
@@ -327,6 +331,9 @@ watch(search, () => {
         </el-form-item>
         <el-form-item label="Email" prop="email" class="staff-form-item">
           <el-input v-model="staffFromData.email"></el-input>
+        </el-form-item>
+        <el-form-item label="Địa chỉ" prop="address" class="staff-form-item">
+          <el-input v-model="staffFromData.address"></el-input>
         </el-form-item>
         <el-form-item label="Trạng thái" class="staff-form-item">
           <el-select v-model="staffFromData.state" placeholder="Chọn trạng thái">
