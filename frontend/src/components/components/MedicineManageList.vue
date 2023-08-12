@@ -39,9 +39,11 @@ const medicineFromData = ref<MedicinePrice>({
 
 const fetchMedicinePrices = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://127.0.0.1:3333/medicine_price')
     medicinePrices.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    loading.value = false
     onPageChange(currentPage.value) 
     console.log(response)
   } catch (error) {
@@ -219,7 +221,7 @@ watch(search, () => {
       </div>
     </div>
     <el-scrollbar>
-      <el-table :data="pagingData">
+      <el-table v-loading="loading" :data="pagingData">
         <el-table-column label="Tên thuốc" min-width="300">
           <template #default="scope">
             <div class="medicine-name primary-color">

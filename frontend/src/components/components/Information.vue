@@ -118,9 +118,11 @@ const rules = reactive<FormRules>({
 
 const fetchPatients = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://127.0.0.1:3333')
     patients.value = response.data
     console.log(response)
+    loading.value = false
   } catch (error) {
     console.log(error)
   }
@@ -240,7 +242,7 @@ watch(datePicker, () => {
 <template>
   <el-main class="information-list-main">
     <h1>THÔNG TIN CƠ SỞ</h1>
-    <div class="d-flex">
+    <div v-loading="loading" class="d-flex">
       <div class="information-left">
         <el-form
           ref="ruleFormRef"

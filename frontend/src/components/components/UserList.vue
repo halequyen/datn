@@ -43,9 +43,11 @@ const userFromData = ref<User>({
 
 const fetchUsers = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://127.0.0.1:3333/user')
     users.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    loading.value = false
     onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
@@ -248,7 +250,7 @@ watch(staffs, () => {
       </div>
     </div>
     <el-scrollbar>
-      <el-table :data="pagingData">
+      <el-table v-loading="loading" :data="pagingData">
         <el-table-column label="Tên đăng nhập" min-width="140">
           <template #default="scope">
             <div class="user-name primary-color">

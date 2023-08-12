@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { ElDrawer, ElMessageBox, ElNotification } from 'element-plus'
 import { formatExpense } from '../../format'
+import { faL } from '@fortawesome/free-solid-svg-icons';
 
 interface ServicePrice {
   _id: String
@@ -33,9 +34,11 @@ const serviceFromData = ref<ServicePrice>({
 
 const fetchServicePrices = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://127.0.0.1:3333/service_price')
     servicePrices.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    loading.value = false
     onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
@@ -207,7 +210,7 @@ watch(search, () => {
       </div>
     </div>
     <el-scrollbar>
-      <el-table :data="pagingData">
+      <el-table v-loading="loading" :data="pagingData">
         <el-table-column label="Tên dịch vụ" min-width="300">
           <template #default="scope">
             <div class="service-name primary-color">

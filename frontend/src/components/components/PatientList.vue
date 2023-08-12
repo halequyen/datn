@@ -288,9 +288,11 @@ const formatTotalPriceData = (patient: Patient) => {
 
 const fetchPatients = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://127.0.0.1:3333')
     patients.value = response.data
     pagingData.value = filterTableDataSorted.value.slice(0, pageSize.value)
+    loading.value = false
     onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
@@ -544,6 +546,7 @@ const editorConfig = {
 const rules = ref({
   name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
   phone: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  gender: [{ required: true, message: 'Vui lòng không bỏ trống' }],
   checkDate: [{ required: true, message: 'Vui lòng không bỏ trống' }]
 })
 
@@ -732,9 +735,6 @@ watch(search, () => {
             <el-option label="Chưa thanh toán" :value="'0'" />
             <el-option label="Đã thanh toán" :value="'1'" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="Chi phí" prop="expense" class="patient-form-item">
-          <el-input v-model="patientFormData.expense"></el-input>
         </el-form-item>
         <el-form-item label="Phòng khám" prop="room" class="patient-form-item">
           <el-input v-model="patientFormData.room"></el-input>

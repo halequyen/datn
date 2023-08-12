@@ -83,7 +83,7 @@ const chartDom = ref(null)
 
 <template>
   <el-main>
-    <h1>SƠ ĐỒ PHÒNG KHÁM</h1>
+    <h1>BẢN ĐỒ PHÒNG KHÁM</h1>
     <div class="map-main">
       <img class="map-img" src="../../assets/images/map.png" alt="">
         <div ref="chartDom" style="width: 100%; height: 400px"></div>

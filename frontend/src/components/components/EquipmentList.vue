@@ -11,7 +11,6 @@ interface Equipment {
   quantity: Number
   price: Number
   type: String
-  image: String
 }
 
 const equipments = ref<Equipment[]>([])
@@ -31,15 +30,16 @@ const equipmentFromData = ref<Equipment>({
   unit: '',
   quantity: 0,
   price: 0,
-  type: '',
-  image: ''
+  type: ''
 })
 
 const fetchEquipments = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://127.0.0.1:3333/equipment')
     equipments.value = response.data
     pagingData.value = filterTableData.value.slice(0, pageSize.value)
+    loading.value = false
     onPageChange(currentPage.value)
     console.log(response)
   } catch (error) {
@@ -68,8 +68,7 @@ const resetForm = () => {
     unit: '',
     quantity: 0,
     price: 0,
-    type: '',
-    image: ''
+    type: ''
   }
 }
 
@@ -215,7 +214,7 @@ watch(search, () => {
       </div>
     </div>
     <el-scrollbar>
-      <el-table :data="pagingData">
+      <el-table v-loading="loading" :data="pagingData">
         <el-table-column label="Tên thiết bị" min-width="300">
           <template #default="scope">
             <div class="equipment-name primary-color">

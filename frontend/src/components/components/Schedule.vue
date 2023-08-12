@@ -135,10 +135,12 @@ const badge9 = computed(() => {
 
 const fetchPatients = async () => {
   try {
+    loading.value = true
     const response = await axios.get('http://127.0.0.1:3333/schedule')
     patients.value = response.data
     selectedDate.value = selectedDate.value || formatDate(new Date().toDateString())
     pagingData.value = filteredData.value.slice(0, pageSize.value)
+    loading.value = false
     onPageChange(currentPage.value)
     console.log(response)
     socket.on('new-schedule', (schedule: Patient) => {
@@ -299,7 +301,8 @@ const cancelForm = () => {
 
 const rules = ref({
   name: [{ required: true, message: 'Vui lòng không bỏ trống' }],
-  phone: [{ required: true, message: 'Vui lòng không bỏ trống' }]
+  phone: [{ required: true, message: 'Vui lòng không bỏ trống' }],
+  service: [{ required: true, message: 'Vui lòng không bỏ trống' }],
 })
 
 onMounted(async () => {
@@ -400,7 +403,7 @@ watch(
       </div>
     </div>
     <el-scrollbar>
-      <el-table :data="pagingData">
+      <el-table v-loading="loading" :data="pagingData">
         <el-table-column label="Tên bệnh nhân" min-width="140">
           <template #default="scope">
             <div class="patient-name primary-color">
