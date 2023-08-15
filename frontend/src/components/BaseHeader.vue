@@ -72,12 +72,12 @@ watch(token, (newValue) => {
     <ul v-if="token" class="login">
       <li style="margin-right: 40px; margin-top: -3px;"><b>{{ owner }}</b></li>
       <li><el-dropdown trigger="click">
-          <span class="el-dropdown-link">
+          <!-- <span class="el-dropdown-link">
             <el-badge v-if="notifications.length > 0" :value="notifications.length" :max="10" class="item">
               <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-bell" />
             </el-badge>
             <font-awesome-icon class="font-awesome-icon" icon="fa-solid fa-bell" />
-          </span>
+          </span> -->
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item v-for="(notification, index) in notifications" :key="index">
